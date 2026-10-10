@@ -15,148 +15,176 @@
     <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet" />
   </head>
   <body>
-    <a class="skip" href="#work">Skip to work</a>
+    <a class="skip" href="#/work">Skip to work</a>
 
     <header class="nav" data-theme="dark">
       <div class="wrap nav__in">
-        <a class="nav__brand" href="#top" aria-label="Reyimation, back to top" data-wordmark></a>
+        <a class="nav__brand" href="#/" aria-label="Reyimation, home" data-wordmark></a>
         <nav aria-label="Primary">
           <ul class="nav__links">
-            <li><a href="#work">Work</a></li>
-            <li><a href="#services">Services</a></li>
-            <li><a href="#process">Process</a></li>
-            <li><a href="#about">About</a></li>
+            <li><a href="#/work" data-route-link="work">Work</a></li>
+            <li><a href="#/services" data-route-link="services">Services</a></li>
+            <li><a href="#/process" data-route-link="process">Process</a></li>
+            <li><a href="#/about" data-route-link="about">About</a></li>
           </ul>
         </nav>
         <a class="pill" href="#contact">Hire me</a>
       </div>
+      <nav class="nav__mobile" aria-label="Primary, mobile">
+        <a href="#/work" data-route-link="work">Work</a>
+        <a href="#/services" data-route-link="services">Services</a>
+        <a href="#/process" data-route-link="process">Process</a>
+        <a href="#/about" data-route-link="about">About</a>
+      </nav>
     </header>
 
     <main>
-      <!-- Hero: the wordmark traces itself on, then the play button lands -->
-      <section class="hero" id="top" data-nav="dark">
-        <div class="hero__glow" aria-hidden="true"></div>
-        <div class="wrap hero__in">
-          <p class="eyebrow hero__eyebrow">Video editor &amp; motion designer</p>
-          <h1 class="sr-only">Reyimation</h1>
-          <div class="hero__mark" data-wordmark data-draw="hero"></div>
-          <div class="hero__copy">
-            <p class="hero__title">Light, in motion.</p>
-            <p class="lede hero__lede">Brand films, YouTube edits, motion graphics and short-form. Cut for story, timed to the frame.</p>
+      <!-- ============ HOME ============ -->
+      <div class="view" data-view="home">
+        <section class="hero" data-nav="dark">
+          <div class="hero__glow" aria-hidden="true"></div>
+          <div class="wrap hero__in">
+            <p class="eyebrow hero__eyebrow">Video editor &amp; motion designer</p>
+            <h1 class="sr-only">Reyimation</h1>
+            <div class="hero__mark" data-wordmark data-draw="hero"></div>
+            <div class="hero__copy">
+              <p class="hero__title">Light, in motion.</p>
+              <p class="lede hero__lede">Brand films, YouTube edits, motion graphics and short-form. Cut for story, timed to the frame.</p>
+            </div>
+            <div class="cta">
+              <button class="btn btn--signal" type="button" data-play-reel><span class="btn__tri" aria-hidden="true"></span>Watch the reel</button>
+              <a class="btn btn--ghost" href="#/work">See the work</a>
+            </div>
           </div>
-          <div class="cta">
-            <button class="btn btn--signal" type="button" data-play-reel><span class="btn__tri" aria-hidden="true"></span>Watch the reel</button>
-            <a class="btn btn--ghost" href="#work">See the work</a>
+          <div class="wrap hero__meta tc" aria-hidden="true">
+            <span>TC <b data-live-tc>00:00:00:00</b></span>
+            <span class="hide-sm">3840×2160 · 25 FPS</span>
           </div>
-        </div>
-        <div class="wrap hero__meta tc" aria-hidden="true">
-          <span>TC <b data-live-tc>00:00:00:00</b></span>
-          <span class="hide-sm">3840×2160 · 25 FPS</span>
-        </div>
-      </section>
+        </section>
 
-      <!-- Showreel: the kit's motion player, opening to full-bleed on scroll -->
-      <section class="reel" id="reel" data-nav="dark">
-        <div class="reel__pin">
-          <div class="reel__cap reel__cap--l label">Showreel</div>
-          <div class="reel__cap reel__cap--r label">2026 · <span data-reel-length></span></div>
-          <div class="reel__frame">
-            <div class="reel__media" data-reel-media>
-              <div class="reel__loop">
-                <div class="reel__loopmark" data-wordmark data-draw="loop"></div>
-                <span class="reel__tc tc" data-loop-tc>00:00:00:00</span>
+        <!-- Showreel: the kit's motion player, opening to full-bleed on scroll -->
+        <section class="reel" data-nav="dark">
+          <div class="reel__pin">
+            <div class="reel__cap reel__cap--l label">Showreel</div>
+            <div class="reel__cap reel__cap--r label">2026 · <span data-reel-length></span></div>
+            <div class="reel__frame">
+              <div class="reel__media" data-reel-media>
+                <div class="reel__loop">
+                  <div class="reel__loopmark" data-wordmark data-draw="loop"></div>
+                  <span class="reel__tc tc" data-loop-tc>00:00:00:00</span>
+                </div>
               </div>
+              <button class="reel__play" type="button" data-play-reel aria-label="Play showreel">
+                <span class="reel__pill"><i aria-hidden="true"></i>Play reel</span>
+              </button>
             </div>
-            <button class="reel__play" type="button" data-play-reel aria-label="Play showreel">
-              <span class="reel__pill"><i aria-hidden="true"></i>Play reel</span>
-            </button>
           </div>
-        </div>
-      </section>
+        </section>
 
-      <section class="statement" data-nav="light">
-        <div class="wrap">
-          <p class="eyebrow" data-reveal>The approach</p>
-          <p class="statement__text" data-scrub-words>I don't just cut footage. I find the rhythm inside it: the beat where a story lands, the frame where a brand becomes a feeling, the moment a viewer <em>leans in.</em></p>
-        </div>
-      </section>
-
-      <section class="work" id="work" data-nav="light">
-        <div class="wrap">
-          <div class="work__head">
-            <div>
-              <p class="eyebrow" data-reveal>Selected work</p>
-              <h2 class="h-l" data-reveal>Every frame<br />earns its cut.</h2>
-            </div>
-            <div class="filters" aria-label="Filter work" data-filters></div>
-          </div>
-          <div class="grid" data-works></div>
-        </div>
-      </section>
-
-      <section class="services" id="services" data-nav="dark">
-        <div class="services__pin">
-          <div class="wrap services__head">
-            <p class="eyebrow" data-reveal>Services</p>
-            <h2 class="h-l" data-reveal>What I make.</h2>
-          </div>
-          <div class="services__track" data-services></div>
-          <div class="wrap services__bar" aria-hidden="true"><i data-services-progress></i></div>
-        </div>
-      </section>
-
-      <!-- Process: scroll moves the playhead across an edit timeline -->
-      <section class="process" id="process" data-nav="dark">
-        <div class="process__pin">
+        <section class="statement" data-nav="light">
           <div class="wrap">
-            <div class="process__top">
+            <p class="eyebrow" data-reveal>The approach</p>
+            <p class="statement__text" data-scrub-words>I don't just cut footage. I find the rhythm inside it: the beat where a story lands, the frame where a brand becomes a feeling, the moment a viewer <em>leans in.</em></p>
+          </div>
+        </section>
+
+        <!-- Chapters: the way into each page -->
+        <section class="chapters" data-nav="light">
+          <div class="wrap">
+            <p class="eyebrow" data-reveal>Explore</p>
+            <ul class="chapters__list" data-chapters></ul>
+          </div>
+        </section>
+      </div>
+
+      <!-- ============ WORK ============ -->
+      <div class="view" data-view="work" hidden>
+        <section class="work page-top" data-nav="light">
+          <div class="wrap">
+            <div class="work__head">
               <div>
-                <p class="eyebrow">Process</p>
-                <h2 class="h-l">From footage<br />to final.</h2>
+                <p class="eyebrow" data-reveal>Selected work</p>
+                <h2 class="h-l" data-reveal>Every frame<br />earns its cut.</h2>
               </div>
-              <div class="process__tc tc" aria-hidden="true" data-process-tc>00:00:00:00</div>
+              <div class="filters" role="group" aria-label="Filter work" data-filters></div>
             </div>
-            <div class="process__copy" data-process-copy aria-live="polite"></div>
-            <div class="tl" aria-hidden="true">
-              <div class="tl__ruler" data-ruler></div>
-              <div class="tl__tracks">
-                <div class="tl__track"><span class="tl__label">V2</span><div class="tl__lane" data-lane="v2"></div></div>
-                <div class="tl__track"><span class="tl__label">V1</span><div class="tl__lane" data-lane="v1"></div></div>
-                <div class="tl__track tl__track--audio"><span class="tl__label">A1</span><div class="tl__lane" data-lane="a1"></div></div>
+            <div class="grid" data-works></div>
+          </div>
+        </section>
+      </div>
+
+      <!-- ============ SERVICES ============ -->
+      <div class="view" data-view="services" hidden>
+        <section class="services" data-nav="dark">
+          <div class="services__pin">
+            <div class="wrap services__head">
+              <p class="eyebrow">Services</p>
+              <h2 class="h-l">What I make.</h2>
+            </div>
+            <div class="services__track" data-services></div>
+            <div class="wrap services__bar" aria-hidden="true"><i data-services-progress></i></div>
+          </div>
+        </section>
+      </div>
+
+      <!-- ============ PROCESS ============ -->
+      <div class="view" data-view="process" hidden>
+        <section class="process" data-nav="dark">
+          <div class="process__pin">
+            <div class="wrap">
+              <div class="process__top">
+                <div>
+                  <p class="eyebrow">Process</p>
+                  <h2 class="h-l">From footage<br />to final.</h2>
+                </div>
+                <div class="process__tc tc" aria-hidden="true" data-process-tc>00:00:00:00</div>
               </div>
-              <div class="tl__playhead" data-playhead><i></i></div>
+              <div class="process__copy" data-process-copy aria-live="polite"></div>
+              <div class="tl" aria-hidden="true">
+                <div class="tl__ruler" data-ruler></div>
+                <div class="tl__tracks">
+                  <div class="tl__track"><span class="tl__label">V2</span><div class="tl__lane" data-lane="v2"></div></div>
+                  <div class="tl__track"><span class="tl__label">V1</span><div class="tl__lane" data-lane="v1"></div></div>
+                  <div class="tl__track tl__track--audio"><span class="tl__label">A1</span><div class="tl__lane" data-lane="a1"></div></div>
+                </div>
+                <div class="tl__playhead" data-playhead><i></i></div>
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      </div>
 
-      <section class="tools" data-nav="light">
-        <div class="wrap">
-          <p class="eyebrow" data-reveal>Toolkit</p>
-          <h2 class="h-l" data-reveal>Industry tools.<br /><span class="muted">Used with intent.</span></h2>
-          <ul class="tools__list" data-tools></ul>
-        </div>
-      </section>
-
-      <section class="about" id="about" data-nav="light">
-        <div class="wrap about__in">
-          <div class="about__mark" data-reveal aria-hidden="true">
-            <svg class="bigi" viewBox="-12 0 40 106"><path d="M7 47 V93" stroke="currentColor" stroke-width="14" stroke-linecap="round" fill="none" /><path class="bigi__tri" d="M2 17 L17 26 L2 35 Z" /></svg>
-          </div>
-          <div>
-            <p class="eyebrow" data-reveal>About</p>
-            <h2 class="h-m" data-reveal>A one-person edit suite with studio standards.</h2>
-            <p class="lede muted" data-reveal>I edit and animate for brands, creators and agencies. The work starts with the story and ends with the details: the J-cut that hides a jump, the ease that makes a title feel expensive, the mix that lets a voice breathe.</p>
-            <div class="about__facts" data-reveal>
-              <div><span class="label">Based in</span><b data-location></b></div>
-              <div><span class="label">Focus</span><b>Editing, motion, short-form</b></div>
-              <div><span class="label">Delivery</span><b>4K ProRes, H.264, vertical</b></div>
+      <!-- ============ ABOUT ============ -->
+      <div class="view" data-view="about" hidden>
+        <section class="about page-top" data-nav="light">
+          <div class="wrap about__in">
+            <div class="about__mark" data-reveal aria-hidden="true">
+              <svg class="bigi" viewBox="-12 0 40 106"><path d="M7 47 V93" stroke="currentColor" stroke-width="14" stroke-linecap="round" fill="none" /><path class="bigi__tri" d="M2 17 L17 26 L2 35 Z" /></svg>
             </div>
-            <a class="btn btn--ink" data-cv hidden>Download CV</a>
+            <div>
+              <p class="eyebrow" data-reveal>About</p>
+              <h2 class="h-m" data-reveal>A one-person edit suite with studio standards.</h2>
+              <p class="lede muted" data-reveal>I edit and animate for brands, creators and agencies. The work starts with the story and ends with the details: the J-cut that hides a jump, the ease that makes a title feel expensive, the mix that lets a voice breathe.</p>
+              <div class="about__facts" data-reveal>
+                <div><span class="label">Based in</span><b data-location></b></div>
+                <div><span class="label">Focus</span><b>Editing, motion, short-form</b></div>
+                <div><span class="label">Delivery</span><b>4K ProRes, H.264, vertical</b></div>
+              </div>
+              <a class="btn btn--ink" data-cv hidden>Download CV</a>
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
 
+        <section class="tools" data-nav="light">
+          <div class="wrap">
+            <p class="eyebrow" data-reveal>Toolkit</p>
+            <h2 class="h-l" data-reveal>Two tools.<br /><span class="muted">Used with intent.</span></h2>
+            <ul class="tools__list" data-tools></ul>
+          </div>
+        </section>
+      </div>
+
+      <!-- ============ CONTACT (on every page) ============ -->
       <section class="contact" id="contact" data-nav="dark">
         <div class="contact__glow" aria-hidden="true"></div>
         <div class="wrap contact__in">
@@ -185,6 +213,9 @@
         </div>
       </div>
     </footer>
+
+    <!-- Page transition stage -->
+    <div class="transit" data-transit aria-hidden="true"></div>
 
     <div class="modal" data-modal hidden role="dialog" aria-modal="true" aria-label="Video player">
       <div class="modal__back" data-close></div>

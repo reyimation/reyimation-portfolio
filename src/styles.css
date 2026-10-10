@@ -87,14 +87,31 @@ section { position: relative; }
 .btn__tri { width: 0; height: 0; border-style: solid; border-width: 5px 0 5px 9px; border-color: transparent transparent transparent currentColor; }
 .cta { display: flex; flex-wrap: wrap; gap: 12px; }
 
-/* ---------- Wordmark ---------- */
+/* ---------- Wordmark: the kit's draw-on, verbatim ---------- */
 .wm { display: block; width: 100%; height: auto; overflow: visible; }
 .wm .tri { fill: var(--signal); }
 .wm .dot { fill: currentColor; }
-.wm .ltr { stroke-dasharray: 1; stroke-dashoffset: 0; }
-[data-draw] .ltr { stroke-dashoffset: 1; }
-/* Hidden until GSAP pops them; GSAP owns their SVG transform origin. */
-[data-draw] .tri, [data-draw] .dot { visibility: hidden; }
+/* Waiting to draw: nothing on screen yet. */
+.pre .ltr { stroke-dasharray: 1; stroke-dashoffset: 1; }
+.pre .tri, .pre .dot { transform-box: fill-box; transform-origin: center; transform: scale(0); }
+/* Kit: each letter traces for 1.1 s, starting 0.25 s + i × 0.09 s; play button pops at 1.55 s, dot at 1.7 s.
+   --ts speeds the whole thing up (page transitions use it). */
+.draw .ltr {
+  stroke-dasharray: 1; stroke-dashoffset: 1;
+  animation: wm-draw calc(1.1s / var(--ts, 1)) cubic-bezier(0.6, 0, 0.2, 1) forwards;
+  animation-delay: calc((0.25s + var(--i) * 0.09s) / var(--ts, 1));
+}
+.draw .tri { transform-box: fill-box; transform-origin: center; transform: scale(0); animation: wm-pop calc(0.55s / var(--ts, 1)) cubic-bezier(0.3, 1.6, 0.5, 1) forwards calc(1.55s / var(--ts, 1)); }
+.draw .dot { transform-box: fill-box; transform-origin: center; transform: scale(0); animation: wm-pop calc(0.45s / var(--ts, 1)) cubic-bezier(0.3, 1.6, 0.5, 1) forwards calc(1.7s / var(--ts, 1)); }
+@keyframes wm-draw { to { stroke-dashoffset: 0; } }
+@keyframes wm-pop { to { transform: scale(1); } }
+
+/* Tap highlight would flash a dark box on phones. */
+a, button, [role="button"] { -webkit-tap-highlight-color: transparent; }
+
+/* ---------- Views (pages) ---------- */
+.view[hidden] { display: none !important; }
+.page-top { padding-top: calc(var(--nav-h) + clamp(64px, 9vw, 120px)) !important; }
 
 /* ---------- Nav (kit: 52px glass bar, 13px stone links, ink pill) ---------- */
 .nav {
@@ -116,7 +133,50 @@ section { position: relative; }
 .pill { font: 500 12px/1 var(--sans); padding: 8px 13px; border-radius: 999px; white-space: nowrap; transition: background-color 0.4s, color 0.4s; }
 .nav[data-theme="light"] .pill { background: var(--ink); color: var(--paper); }
 .nav[data-theme="dark"] .pill { background: var(--paper); color: var(--ink); }
-@media (max-width: 720px) { .nav__links { display: none; } }
+.nav__links a.is-active { position: relative; }
+.nav__mobile { display: none; }
+@media (max-width: 720px) {
+  .nav__links { display: none; }
+  /* Phones: the four pages sit in a second row under the bar. */
+  .nav__mobile { display: flex; justify-content: space-between; gap: 8px; padding: 0 var(--gutter) 10px; font-size: 13px; }
+  .nav__mobile a { color: var(--nav-muted); padding: 6px 0; }
+  .nav__mobile a.is-active { color: inherit; }
+  :root { --nav-h: 88px; }
+  .nav__in { height: 52px; }
+}
+
+/* ---------- Page transitions ---------- */
+.transit { position: fixed; inset: 0; z-index: 70; pointer-events: none; visibility: hidden; }
+.transit.is-on { visibility: visible; pointer-events: auto; }
+.transit__panel { position: absolute; inset: 0; background: var(--night); }
+.transit__panel--ink { background: var(--ink); }
+.transit__half { position: absolute; left: 0; right: 0; height: 50.5%; background: var(--ink); }
+.transit__half--top { top: 0; }
+.transit__half--bottom { bottom: 0; }
+.transit__cut { position: absolute; left: 0; right: 0; top: 50%; height: 2px; margin-top: -1px; background: var(--signal); transform-origin: left; }
+.transit__center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; color: var(--paper); text-align: center; padding: var(--gutter); }
+.transit__title { font-size: clamp(48px, 9vw, 112px); line-height: 0.98; font-weight: 600; letter-spacing: -0.035em; }
+.transit__label { color: var(--stone-ink); }
+.transit__mark { width: min(560px, 76vw); color: var(--paper); }
+.transit__playhead { position: absolute; top: 0; bottom: 0; left: 0; width: 2px; margin-left: -1px; background: var(--signal); }
+.transit__playhead::before { content: ""; position: absolute; top: 0; left: 50%; width: 16px; height: 18px; transform: translateX(-50%); background: var(--signal); clip-path: polygon(0 0, 100% 0, 100% 60%, 50% 100%, 0 60%); }
+.transit__tc { position: absolute; left: 24px; top: 24px; font-size: 13px; color: var(--stone-ink); }
+.transit__play { width: clamp(64px, 9vw, 104px); aspect-ratio: 30 / 36; background: var(--signal); clip-path: polygon(0 0, 100% 50%, 0 100%); }
+
+/* ---------- Chapters (home → pages) ---------- */
+.chapters { padding-block: 0 var(--section); background: var(--paper); }
+.chapters__list { border-top: 1px solid var(--line-paper); }
+.chapters__list a {
+  display: grid; grid-template-columns: 64px 1fr auto; align-items: baseline; gap: 16px;
+  padding: clamp(20px, 3vw, 32px) 0; border-bottom: 1px solid var(--line-paper);
+}
+.chapters__list .label { color: var(--stone); }
+.chapters__list b { font-size: clamp(30px, 4.4vw, 56px); font-weight: 600; letter-spacing: -0.035em; line-height: 1.02; transition: transform 0.6s var(--rise); }
+.chapters__list span.sub { grid-column: 2; color: var(--stone); font-size: 16px; margin-top: -4px; }
+.chapters__arrow { grid-row: 1; grid-column: 3; font-size: clamp(22px, 2.6vw, 32px); color: var(--stone); transition: transform 0.6s var(--rise), color 0.3s; }
+.chapters__list a:hover b { transform: translateX(10px); }
+.chapters__list a:hover .chapters__arrow { transform: translateX(6px); color: var(--ink); }
+@media (max-width: 560px) { .chapters__list a { grid-template-columns: 40px 1fr auto; } }
 
 /* ---------- Hero (kit hero: night, glow, drawn wordmark) ---------- */
 .hero {
@@ -184,10 +244,12 @@ section { position: relative; }
 /* ---------- Work ---------- */
 .work { padding-block: 0 var(--section); background: var(--paper); }
 .work__head { display: flex; justify-content: space-between; align-items: flex-end; gap: 32px; flex-wrap: wrap; margin-bottom: clamp(40px, 6vw, 64px); }
-.filters { display: flex; gap: 4px; padding: 4px; background: var(--mist); border-radius: 999px; flex-wrap: wrap; }
-.filters button { font: 500 14px/1 var(--sans); padding: 10px 16px; border-radius: 999px; color: var(--stone); min-height: 38px; transition: background-color 0.3s, color 0.3s; }
+/* Segmented control: the chosen filter is a Paper chip on the Mist track, no dark block. */
+.filters { display: flex; gap: 2px; padding: 4px; background: var(--mist); border-radius: 999px; flex-wrap: wrap; }
+.filters button { font: 500 14px/1 var(--sans); padding: 10px 16px; border-radius: 999px; color: var(--stone); min-height: 38px; transition: background-color 0.3s, color 0.3s, box-shadow 0.3s; }
 .filters button:hover { color: var(--ink); }
-.filters button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+.filters button[aria-pressed="true"] { background: var(--paper); color: var(--ink); box-shadow: 0 1px 2px rgba(16, 16, 18, 0.08), 0 0 0 1px rgba(16, 16, 18, 0.04); }
+.filters button:focus:not(:focus-visible) { outline: none; }
 
 .grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 14px; }
 .card { grid-column: span 6; text-align: left; cursor: pointer; border-radius: var(--radius); }
@@ -253,9 +315,12 @@ section { position: relative; }
 .vis-clips div { display: flex; gap: 4px; height: 26%; }
 .vis-clips span { border-radius: 6px; background: var(--line-ink); transform-origin: left; }
 .vis-clips span.hot { background: var(--paper); }
-.vis-trace svg { width: 100%; height: 100%; overflow: visible; }
-.vis-trace path { fill: none; stroke: var(--paper); stroke-width: 14; stroke-linecap: round; stroke-linejoin: round; }
-.vis-trace .tri { fill: var(--signal); stroke: none; }
+/* The kit's motion player, in miniature: timecode, the full wordmark drawing on, Replay. */
+.vis-player { border-radius: 18px; background: var(--ink); display: flex; align-items: center; justify-content: center; overflow: hidden; }
+.vis-player__wm { width: 70%; color: var(--paper); }
+.vis-player .tc { position: absolute; left: 12px; top: 10px; font-size: 11px; font-weight: 400; color: var(--stone-ink); }
+.vis-player__replay { position: absolute; right: 8px; bottom: 8px; font: 500 12px/1 var(--sans); background: rgba(250, 250, 247, 0.12); color: var(--paper); border-radius: 999px; padding: 7px 11px; transition: background-color 0.3s; }
+.vis-player__replay:hover { background: rgba(250, 250, 247, 0.22); }
 .vis-phone { display: flex; align-items: flex-end; gap: 12px; }
 .vis-phone span { height: 100%; aspect-ratio: 9 / 16; border-radius: 12px; box-shadow: inset 0 0 0 1.5px var(--line-ink); position: relative; overflow: hidden; }
 .vis-phone span::after { content: ""; position: absolute; left: 14%; right: 14%; bottom: 14%; height: 5%; border-radius: 3px; background: var(--stone-ink); }
@@ -272,6 +337,7 @@ section { position: relative; }
   .svc__vis { flex: 1; min-height: 56px; max-height: 160px; height: auto; }
 }
 @media (max-width: 760px) {
+  .services__pin { padding-top: calc(var(--nav-h) + 48px); }
   .services__track { flex-direction: column; width: auto; padding-inline: var(--gutter); }
   .svc { width: 100%; }
   .services__bar { display: none; }
@@ -318,13 +384,13 @@ section { position: relative; }
 @media (max-width: 560px) { .clip { font-size: 10px; padding: 0 6px; } }
 
 /* ---------- Toolkit ---------- */
-.tools { padding-block: var(--section) 0; background: var(--paper); }
-.tools__list { display: grid; grid-template-columns: repeat(3, 1fr); margin-top: clamp(48px, 7vw, 72px); border-top: 1px solid var(--line-paper); }
-.tools__list li { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 22px 20px 22px 0; border-bottom: 1px solid var(--line-paper); }
-.tools__list b { font-size: clamp(20px, 2.2vw, 26px); font-weight: 600; letter-spacing: -0.02em; }
-.tools__list span { color: var(--stone); }
-@media (max-width: 860px) { .tools__list { grid-template-columns: 1fr 1fr; } }
-@media (max-width: 520px) { .tools__list { grid-template-columns: 1fr; } }
+.tools { padding-block: 0 var(--section); background: var(--paper); }
+.tools__list { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: clamp(48px, 7vw, 72px); }
+.tools__list li { background: var(--mist); border-radius: var(--radius); padding: clamp(24px, 3vw, 36px); display: flex; flex-direction: column; gap: 14px; min-height: 220px; justify-content: space-between; }
+.tools__list .label { color: var(--stone); }
+.tools__list b { display: block; font-size: clamp(28px, 3.6vw, 44px); font-weight: 600; letter-spacing: -0.03em; line-height: 1.08; }
+.tools__list p { color: var(--stone); font-size: 16px; max-width: 32ch; margin-top: 8px; }
+@media (max-width: 620px) { .tools__list { grid-template-columns: 1fr; } }
 
 /* ---------- About (kit "It's all in the i") ---------- */
 .about { padding-block: var(--section); background: var(--paper); }
@@ -387,8 +453,9 @@ section { position: relative; }
 
 /* ---------- Reduced motion ---------- */
 @media (prefers-reduced-motion: reduce) {
-  [data-draw] .ltr { stroke-dashoffset: 0; }
-  [data-draw] .tri, [data-draw] .dot { visibility: visible; }
+  .pre .ltr, .draw .ltr { animation: none; stroke-dashoffset: 0; }
+  .pre .tri, .pre .dot, .draw .tri, .draw .dot { animation: none; transform: none; }
+  .chapters__list b, .chapters__arrow { transition: none; }
   [data-reveal].below { transform: none; }
   .bigi__tri { animation: none; }
   .btn, .card__media > *, .card__play { transition: none; }

@@ -65,7 +65,7 @@ export const SERVICES = [
     code: "01",
     title: "Video editing",
     body: "YouTube videos, ads, brand films and documentaries, cut for story, pacing and retention.",
-    tags: ["Premiere Pro", "DaVinci Resolve", "Story", "Pacing"],
+    tags: ["Premiere Pro", "Story", "Pacing", "Retention"],
     visual: "clips",
   },
   {
@@ -73,7 +73,7 @@ export const SERVICES = [
     title: "Motion graphics",
     body: "Titles, explainers, logo animation and kinetic type that keep the eye moving.",
     tags: ["After Effects", "Kinetic type", "Logo animation", "Explainers"],
-    visual: "trace",
+    visual: "player",
   },
   {
     code: "03",
@@ -100,10 +100,6 @@ export const PROCESS = [
 ];
 
 export const TOOLS = [
-  { name: "Premiere Pro", use: "Edit" },
-  { name: "After Effects", use: "Motion" },
-  { name: "DaVinci Resolve", use: "Colour" },
-  { name: "Photoshop", use: "Design" },
-  { name: "Illustrator", use: "Vector" },
-  { name: "Audition", use: "Sound" },
+  { name: "Premiere Pro", use: "Edit", body: "Story, pacing, sound and delivery. Every cut starts here." },
+  { name: "After Effects", use: "Motion", body: "Titles, logo animation, kinetic type and explainers." },
 ];

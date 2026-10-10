@@ -5,20 +5,21 @@ import { Flip } from "gsap/Flip";
 import { CustomEase } from "gsap/CustomEase";
 import Lenis from "lenis";
 import { SITE, WORKS, SERVICES, PROCESS, TOOLS, type Work, type Category } from "./content";
-import { wordmark } from "./wordmark";
+import { wordmark, draw, drawDuration } from "./wordmark";
 import { parseVideo } from "./embed";
 
 gsap.registerPlugin(ScrollTrigger, Flip, CustomEase);
 
-// Kit motion curves. Trace: letters drawing on. Pop: the play button landing, ~6% overshoot.
-CustomEase.create("trace", "0.6, 0, 0.2, 1");
-CustomEase.create("pop", "0.3, 1.6, 0.5, 1");
+// Kit motion curves.
+CustomEase.create("trace", "0.6, 0, 0.2, 1"); // things drawing / wiping in along their path
+CustomEase.create("rise", "0.2, 0.8, 0.2, 1"); // content arriving
+CustomEase.create("pop", "0.3, 1.6, 0.5, 1"); // the play button landing
 
 const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 const $ = <T extends Element = HTMLElement>(sel: string, root: ParentNode = document) => root.querySelector(sel) as T;
 const $$ = <T extends Element = HTMLElement>(sel: string, root: ParentNode = document) => Array.from(root.querySelectorAll(sel)) as T[];
+const navH = () => $(".nav").getBoundingClientRect().height;
 
-const NAV_H = 52;
 const FPS = 25;
 const pad = (n: number) => String(n).padStart(2, "0");
 function timecode(seconds: number): string {
@@ -27,86 +28,13 @@ function timecode(seconds: number): string {
   return `${pad(Math.floor(s / 3600))}:${pad(Math.floor(s / 60) % 60)}:${pad(s % 60)}:${pad(total % FPS)}`;
 }
 
-/* ---------------------------------------------------------------- */
-/* Static content                                                   */
-/* ---------------------------------------------------------------- */
-
-$$("[data-wordmark]").forEach((el) => (el.innerHTML = wordmark()));
-$$("[data-email]").forEach((el) => (el.textContent = SITE.email));
-$("[data-location]").textContent = SITE.location;
-$("[data-year]").textContent = String(new Date().getFullYear());
-$("[data-reel-length]").textContent = SITE.reelLength;
-$<HTMLAnchorElement>("[data-mailto]").href = `mailto:${SITE.email}?subject=${encodeURIComponent("New project for Reyimation")}`;
-
-const cv = $<HTMLAnchorElement>("[data-cv]");
-if (SITE.cv) {
-  Object.assign(cv, { href: SITE.cv, target: "_blank", rel: "noopener", hidden: false });
-}
-
-const socials = SITE.socials.filter((s) => s.url);
-const socialList = $("[data-socials]");
-if (socials.length) {
-  socialList.innerHTML = socials.map((s) => `<li><a href="${s.url}" target="_blank" rel="noopener">${s.label}</a></li>`).join("");
-} else {
-  socialList.remove();
-}
-
-$("[data-tools]").innerHTML = TOOLS.map((t) => `<li data-reveal><b>${t.name}</b><span class="label">${t.use}</span></li>`).join("");
-
-/* ---------------------------------------------------------------- */
-/* Smooth scroll                                                    */
-/* ---------------------------------------------------------------- */
-
-// Start at the top so the intro plays and pinned sections measure cleanly.
-if (!location.hash) {
-  history.scrollRestoration = "manual";
-  window.scrollTo(0, 0);
-}
-
-let lenis: Lenis | null = null;
-if (!reduced) {
-  lenis = new Lenis({ duration: 1.1, easing: (t) => 1 - Math.pow(1 - t, 4) });
-  lenis.on("scroll", ScrollTrigger.update);
-  gsap.ticker.add((time) => lenis!.raf(time * 1000));
-  gsap.ticker.lagSmoothing(0);
-}
-
-document.addEventListener("click", (e) => {
-  const a = (e.target as Element).closest<HTMLAnchorElement>('a[href^="#"]');
-  if (!a) return;
-  const id = a.getAttribute("href")!;
-  const target = id === "#top" ? 0 : document.querySelector<HTMLElement>(id);
-  if (target === null) return;
-  e.preventDefault();
-  // Pinned chapters sit at the very top; everything else clears the fixed nav.
-  const pinned = target !== 0 && target.parentElement?.classList.contains("pin-spacer");
-  if (lenis) lenis.scrollTo(target, { duration: 1.4, offset: pinned ? 0 : -NAV_H - 32 });
-  else if (target === 0) window.scrollTo(0, 0);
-  else target.scrollIntoView();
-});
-
-/* ---------------------------------------------------------------- */
-/* Wordmark draw-on (kit timing, under two seconds)                 */
-/* ---------------------------------------------------------------- */
-
-// Letter i starts at 0.25 s + i × 0.09 s and traces for 1.1 s; the play button pops at 1.55 s, the dot at 1.7 s.
-function drawTimeline(root: Element, delay = 0) {
-  const tl = gsap.timeline({ delay });
-  tl.fromTo($$("path.ltr", root), { strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: 1.1, ease: "trace", stagger: 0.09 }, 0.25)
-    .fromTo($(".tri", root), { scale: 0, transformOrigin: "50% 50%", visibility: "visible" }, { scale: 1, duration: 0.55, ease: "pop", immediateRender: true }, 1.55)
-    .fromTo($(".dot", root), { scale: 0, transformOrigin: "50% 50%", visibility: "visible" }, { scale: 1, duration: 0.45, ease: "pop", immediateRender: true }, 1.7);
-  return tl;
-}
-
-function showDrawn(root: Element) {
-  gsap.set($$("path.ltr", root), { strokeDashoffset: 0 });
-  gsap.set([$(".tri", root), $(".dot", root)], { scale: 1, visibility: "visible" });
-}
-
-// Kit player timecode: counts from 00:00:00:00 and holds at 00:00:03:00 (75 frames).
+// Kit player timecode: counts from 00:00:00:00 and holds at 00:00:03:00 (75 frames). A new run cancels the old one.
 function runTimecode(el: HTMLElement) {
+  const run = String(Number(el.dataset.run ?? 0) + 1);
+  el.dataset.run = run;
   const t0 = performance.now();
   const tick = () => {
+    if (el.dataset.run !== run) return;
     const f = Math.min(75, Math.floor((performance.now() - t0) / 40));
     el.textContent = `00:00:${pad(Math.floor(f / FPS))}:${pad(f % FPS)}`;
     if (f < 75) requestAnimationFrame(tick);
@@ -114,188 +42,53 @@ function runTimecode(el: HTMLElement) {
   requestAnimationFrame(tick);
 }
 
-/* ---------------------------------------------------------------- */
-/* Hero                                                             */
-/* ---------------------------------------------------------------- */
-
-const heroMark = $("[data-draw='hero']");
-const liveTc = $("[data-live-tc]");
-if (reduced) {
-  showDrawn(heroMark);
-  liveTc.textContent = "00:00:03:00";
-} else {
-  drawTimeline(heroMark);
-  runTimecode(liveTc);
+function playMark(container: Element, speed = 1) {
+  if (reduced) container.classList.remove("pre");
+  else draw(container, speed);
 }
 
-/* ---------------------------------------------------------------- */
-/* Rise: kit behaviour. Content below the first screen sits 40px    */
-/* lower and rises into place when it enters. Always fully visible. */
-/* ---------------------------------------------------------------- */
+/* ================================================================ */
+/* Static content (built once)                                      */
+/* ================================================================ */
 
-function setupRise(root: ParentNode = document) {
-  if (reduced || !("IntersectionObserver" in window)) return;
-  const els = $$("[data-reveal]", root).filter((el) => el.getBoundingClientRect().top > window.innerHeight);
-  els.forEach((el) => el.classList.add("below"));
-  const io = new IntersectionObserver(
-    (entries) => entries.forEach((en) => {
-      if (en.isIntersecting) {
-        en.target.classList.remove("below");
-        io.unobserve(en.target);
-      }
-    }),
-    { rootMargin: "0px 0px -8% 0px" },
-  );
-  els.forEach((el) => io.observe(el));
-}
-
-/* ---------------------------------------------------------------- */
-/* Video modal                                                      */
-/* ---------------------------------------------------------------- */
-
-const modal = $("[data-modal]");
-const modalMedia = $("[data-modal-media]");
-let lastFocus: HTMLElement | null = null;
-
-function openVideo(title: string, meta: string, url: string, empty = ["Cut in progress.", "This one is still in the edit. Check back soon."]) {
-  lastFocus = document.activeElement as HTMLElement;
-  $("[data-modal-title]").textContent = title;
-  $("[data-modal-meta]").textContent = meta;
-  const v = parseVideo(url);
-  if (v.kind === "iframe") {
-    modalMedia.innerHTML = `<iframe src="${v.src}" title="${title}" allow="autoplay; fullscreen; picture-in-picture; encrypted-media" allowfullscreen></iframe>`;
-  } else if (v.kind === "file") {
-    modalMedia.innerHTML = `<video src="${v.src}" controls autoplay playsinline></video>`;
-  } else {
-    modalMedia.innerHTML = `<div class="modal__empty" data-draw>${wordmark()}<b>${empty[0]}</b><span>${empty[1]}</span></div>`;
-    const card = $(".modal__empty", modalMedia);
-    if (reduced) showDrawn(card);
-    else drawTimeline(card);
-  }
-  modal.hidden = false;
-  lenis?.stop();
-  document.documentElement.style.overflow = "hidden";
-  if (!reduced) {
-    gsap.fromTo(".modal__back", { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.4 });
-    // The player wipes open along its own height (trace, don't fade).
-    gsap.fromTo(".modal__box", { y: 40, clipPath: "inset(50% 0% 50% 0% round 20px)" }, { y: 0, clipPath: "inset(0% 0% 0% 0% round 0px)", duration: 0.9, ease: "trace", clearProps: "clipPath,transform" });
-  }
-  $<HTMLButtonElement>(".modal__close").focus();
-}
-
-function closeVideo() {
-  if (modal.hidden) return;
-  const done = () => {
-    modal.hidden = true;
-    modalMedia.innerHTML = "";
-    gsap.set([".modal__back", ".modal__box"], { clearProps: "all" });
-    lenis?.start();
-    document.documentElement.style.overflow = "";
-    lastFocus?.focus();
-  };
-  if (reduced) return done();
-  gsap.to(".modal__box", { clipPath: "inset(50% 0% 50% 0% round 20px)", duration: 0.45, ease: "trace" });
-  gsap.to(".modal__back", { autoAlpha: 0, duration: 0.45, onComplete: done });
-}
-
-$$("[data-close]").forEach((el) => el.addEventListener("click", closeVideo));
-document.addEventListener("keydown", (e) => {
-  if (e.key === "Escape") closeVideo();
-  if (e.key === "Tab" && !modal.hidden) {
-    const f = $$<HTMLElement>("button, iframe, video, a[href]", modal);
-    if (!f.length) return;
-    const first = f[0], last = f[f.length - 1];
-    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
-    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
-  }
+$$("[data-wordmark]").forEach((el) => {
+  el.innerHTML = wordmark();
+  if (el.hasAttribute("data-draw") && !reduced) el.classList.add("pre");
 });
+$$("[data-email]").forEach((el) => (el.textContent = SITE.email));
+$("[data-location]").textContent = SITE.location;
+$("[data-year]").textContent = String(new Date().getFullYear());
+$("[data-reel-length]").textContent = SITE.reelLength;
+$<HTMLAnchorElement>("[data-mailto]").href = `mailto:${SITE.email}?subject=${encodeURIComponent("New project for Reyimation")}`;
 
-$$("[data-play-reel]").forEach((b) =>
-  b.addEventListener("click", () =>
-    openVideo("Showreel 2026", `Reyimation · ${SITE.reelLength}`, SITE.reel, ["The 2026 reel is in the edit.", "Until it lands, the selected work shows the craft."]),
-  ),
-);
+const cv = $<HTMLAnchorElement>("[data-cv]");
+if (SITE.cv) Object.assign(cv, { href: SITE.cv, target: "_blank", rel: "noopener", hidden: false });
 
-/* ---------------------------------------------------------------- */
-/* Showreel: the kit's motion player opens to full-bleed            */
-/* ---------------------------------------------------------------- */
+const socials = SITE.socials.filter((s) => s.url);
+const socialList = $("[data-socials]");
+if (socials.length) socialList.innerHTML = socials.map((s) => `<li><a href="${s.url}" target="_blank" rel="noopener">${s.label}</a></li>`).join("");
+else socialList.remove();
 
-const reelMedia = $("[data-reel-media]");
-const reelEmbed = parseVideo(SITE.reel, true);
-if (reelEmbed.kind === "file") {
-  reelMedia.innerHTML = `<video src="${reelEmbed.src}" muted loop playsinline autoplay preload="metadata"></video>`;
-} else {
-  $(".reel").classList.add("is-loop");
-  const loopMark = $("[data-draw='loop']");
-  const loopTc = $("[data-loop-tc]");
-  if (reduced) {
-    showDrawn(loopMark);
-    loopTc.textContent = "00:00:03:00";
-  } else {
-    // Like the kit player: each time it comes into view, the mark draws on once, then holds still.
-    const play = () => { drawTimeline(loopMark); runTimecode(loopTc); };
-    ScrollTrigger.create({ trigger: ".reel", start: "top 40%", end: "bottom 60%", onEnter: play, onEnterBack: play });
-  }
-}
+$("[data-tools]").innerHTML = TOOLS.map(
+  (t) => `<li data-reveal><span class="label">${t.use}</span><div><b>${t.name}</b><p>${t.body}</p></div></li>`,
+).join("");
 
-const reelFrame = $(".reel__frame");
-const windowInset = () => {
-  const vw = reelFrame.clientWidth, vh = reelFrame.clientHeight;
-  const w = Math.min(vw * (vw < 760 ? 0.9 : 0.62), 1080);
-  const h = (w * 9) / 16;
-  const y = Math.max(0, (vh - h) / 2), x = (vw - w) / 2;
-  return `inset(${y}px ${x}px ${y}px ${x}px round 32px)`;
+/* ---------------- Routes ---------------- */
+
+type Route = "home" | "work" | "services" | "process" | "about";
+const ROUTES: Record<Route, { title: string; num: string; sub: string; theme: "light" | "dark" }> = {
+  home: { title: "Reyimation", num: "00", sub: "", theme: "dark" },
+  work: { title: "Work", num: "01", sub: "Brand films, YouTube edits, motion and short-form.", theme: "light" },
+  services: { title: "Services", num: "02", sub: "Editing, motion graphics, short-form, colour and sound.", theme: "dark" },
+  process: { title: "Process", num: "03", sub: "From brief to delivery, frame by frame.", theme: "dark" },
+  about: { title: "About", num: "04", sub: "The edit suite, the tools and how I work.", theme: "light" },
 };
 
-if (reduced) {
-  gsap.set(reelFrame, { clipPath: windowInset() });
-} else {
-  gsap.timeline({ scrollTrigger: { trigger: ".reel", start: "top top", end: "+=140%", pin: true, scrub: 0.6, invalidateOnRefresh: true } })
-    .fromTo(reelFrame, { clipPath: windowInset }, { clipPath: "inset(0px 0px 0px 0px round 0px)", ease: "trace", duration: 1 })
-    .to(".reel__cap--l", { x: () => -window.innerWidth * 0.2, ease: "trace", duration: 0.6 }, 0)
-    .to(".reel__cap--r", { x: () => window.innerWidth * 0.2, ease: "trace", duration: 0.6 }, 0)
-    // Then stillness: hold the full frame before moving on.
-    .to({}, { duration: 0.4 });
-}
+$("[data-chapters]").innerHTML = (["work", "services", "process", "about"] as Route[])
+  .map((r) => `<li data-reveal><a href="#/${r}"><span class="label">${ROUTES[r].num}</span><b>${ROUTES[r].title}</b><span class="chapters__arrow" aria-hidden="true">→</span><span class="sub">${ROUTES[r].sub}</span></a></li>`)
+  .join("");
 
-/* ---------------------------------------------------------------- */
-/* Statement: words light up as you read                            */
-/* ---------------------------------------------------------------- */
-
-const statement = $("[data-scrub-words]");
-function splitWords(node: Node) {
-  Array.from(node.childNodes).forEach((child) => {
-    if (child.nodeType !== Node.TEXT_NODE) return splitWords(child);
-    const frag = document.createDocumentFragment();
-    (child.textContent ?? "").split(/(\s+)/).forEach((part) => {
-      if (!part) return;
-      if (/^\s+$/.test(part)) return frag.append(part);
-      const s = document.createElement("span");
-      s.className = "w";
-      s.textContent = part;
-      frag.append(s);
-    });
-    child.replaceWith(frag);
-  });
-}
-splitWords(statement);
-if (!reduced) {
-  // Colour moves from the paper line tone to Ink; the final words land in Signal.
-  gsap.fromTo(
-    $$(".w", statement),
-    { color: "#dcdcd7" },
-    {
-      color: (_i: number, el: Element) => (el.closest("em") ? "#ff4f1f" : "#101012"),
-      ease: "none",
-      stagger: 0.1,
-      scrollTrigger: { trigger: statement, start: "top 80%", end: "bottom 50%", scrub: true },
-    },
-  );
-}
-
-/* ---------------------------------------------------------------- */
-/* Work                                                             */
-/* ---------------------------------------------------------------- */
+/* ---------------- Work grid ---------------- */
 
 function rand(seed: number) {
   let s = seed * 9301 + 49297;
@@ -328,7 +121,6 @@ cards.forEach((card) => {
   card.addEventListener("keydown", (e) => {
     if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open(); }
   });
-
   const vid = $<HTMLVideoElement>("video", card);
   const bars = $$(".poster__wave i", card);
   let wave: gsap.core.Tween | null = null;
@@ -345,7 +137,8 @@ cards.forEach((card) => {
   });
 });
 
-// Filters: cards slide to their new places; arriving cards wipe in, leaving cards wipe out.
+// Filters. Cards that stay slide to their new place; new ones rise in; leaving ones go at once,
+// so nothing dark lingers on screen and the page height settles immediately.
 const cats: ("All" | Category)[] = ["All", ...new Set(WORKS.map((w) => w.category))];
 const filters = $("[data-filters]");
 filters.innerHTML = cats.map((c, i) => `<button type="button" aria-pressed="${i === 0}">${c}</button>`).join("");
@@ -360,23 +153,18 @@ $$<HTMLButtonElement>("button", filters).forEach((btn) =>
       c.classList.toggle("is-hidden", cat !== "All" && c.dataset.cat !== cat);
       c.classList.toggle("is-lead", cat === "All" && i === 0);
     });
+    ScrollTrigger.refresh();
+    if (reduced) return;
     Flip.from(state, {
-      duration: reduced ? 0 : 0.8,
+      duration: 0.7,
       ease: "trace",
-      absolute: true,
-      nested: true,
-      onEnter: (els) => gsap.fromTo(els, { clipPath: "inset(100% 0% 0% 0% round 28px)" }, { clipPath: "inset(0% 0% 0% 0% round 28px)", duration: 0.8, ease: "trace", clearProps: "clipPath" }),
-      onLeave: (els) => gsap.to(els, { clipPath: "inset(0% 0% 100% 0% round 28px)", duration: 0.5, ease: "trace" }),
-      onComplete: () => ScrollTrigger.refresh(),
+      onEnter: (els) => gsap.fromTo(els, { y: 40 }, { y: 0, duration: 1, ease: "rise", clearProps: "transform" }),
     });
   }),
 );
 
-/* ---------------------------------------------------------------- */
-/* Services: horizontal track pinned on desktop                     */
-/* ---------------------------------------------------------------- */
+/* ---------------- Services ---------------- */
 
-const R_PATH = "M7 93 V70 A23 23 0 0 1 41.50 50.08";
 function serviceVisual(kind: string): string {
   if (kind === "clips") {
     const rows = [[3, 5, 2, 4], [6, 3, 4], [2, 4, 3, 5, 2]];
@@ -384,9 +172,8 @@ function serviceVisual(kind: string): string {
       .map((row, ri) => `<div>${row.map((f, ci) => `<span style="flex:${f}"${ri === 1 && ci === 1 ? ' class="hot"' : ""}></span>`).join("")}</div>`)
       .join("")}</div>`;
   }
-  if (kind === "trace") {
-    // "r, then play": the kit's app icon geometry, drawn as a line.
-    return `<div class="vis-trace"><svg viewBox="0 0 100 100" preserveAspectRatio="xMinYMid meet"><g transform="translate(22 6) scale(.62)"><path pathLength="1" d="${R_PATH}"/></g><path class="tri" d="M59.8 30.8 L78.5 42 L59.8 53.2 Z"/></svg></div>`;
+  if (kind === "player") {
+    return `<div class="vis-player"><span class="tc" data-player-tc>00:00:00:00</span><div class="vis-player__wm${reduced ? "" : " pre"}">${wordmark()}</div><button class="vis-player__replay" type="button">Replay</button></div>`;
   }
   if (kind === "phone") return `<div class="vis-phone"><span></span><span class="hot"></span><span></span></div>`;
   return `<div class="vis-wave">${Array.from({ length: 44 }, (_, k) => `<i style="height:${20 + Math.round(Math.abs(Math.sin(k * 0.7)) * 70)}%"></i>`).join("")}</div>`;
@@ -398,55 +185,24 @@ track.innerHTML = SERVICES.map(
     <div class="svc__vis">${serviceVisual(s.visual)}</div>
     <div><h3>${s.title}</h3><p>${s.body}</p><ul class="svc__tags">${s.tags.map((t) => `<li>${t}</li>`).join("")}</ul></div></article>`,
 ).join("");
+const svcs = $$(".svc", track);
 
-// Each visual starts undrawn and traces on once its card arrives.
-if (!reduced) {
-  gsap.set(".vis-clips span", { scaleX: 0 });
-  gsap.set(".vis-trace path:not(.tri)", { strokeDasharray: 1, strokeDashoffset: 1 });
-  gsap.set(".vis-trace .tri", { scale: 0, transformOrigin: "50% 50%" });
-  gsap.set(".vis-phone span", { clipPath: "inset(100% 0% 0% 0% round 12px)" });
-  gsap.set(".vis-wave i", { scaleY: 0 });
-} else {
-  gsap.set(".vis-trace path:not(.tri)", { strokeDasharray: 1, strokeDashoffset: 0 });
+function playPlayer(svc: HTMLElement) {
+  const wm = $(".vis-player__wm", svc);
+  if (!wm) return;
+  playMark(wm);
+  runTimecode($("[data-player-tc]", svc));
 }
+$$(".vis-player__replay", track).forEach((b) => b.addEventListener("click", () => playPlayer(b.closest(".svc") as HTMLElement)));
 
 function animateServiceVisual(svc: HTMLElement) {
   gsap.to($$(".vis-clips span", svc), { scaleX: 1, duration: 1.1, ease: "trace", stagger: 0.06 });
-  gsap.to($$(".vis-trace path:not(.tri)", svc), { strokeDashoffset: 0, duration: 1.1, ease: "trace", delay: 0.25 });
-  gsap.to($$(".vis-trace .tri", svc), { scale: 1, duration: 0.55, ease: "pop", delay: 1.55 });
   gsap.to($$(".vis-phone span", svc), { clipPath: "inset(0% 0% 0% 0% round 12px)", duration: 1.1, ease: "trace", stagger: 0.09 });
   gsap.to($$(".vis-wave i", svc), { scaleY: 1, duration: 1.1, ease: "trace", stagger: { each: 0.015, from: "center" } });
+  playPlayer(svc);
 }
 
-const svcs = $$(".svc", track);
-const mm = gsap.matchMedia();
-mm.add({ desktop: "(min-width: 761px)", mobile: "(max-width: 760px)" }, (ctx) => {
-  if (reduced) return;
-  const { desktop } = ctx.conditions as { desktop: boolean };
-  if (desktop) {
-    const dist = () => Math.max(0, track.scrollWidth - window.innerWidth);
-    const tween = gsap.to(track, {
-      x: () => -dist(),
-      ease: "none",
-      scrollTrigger: {
-        trigger: ".services",
-        start: "top top",
-        end: () => `+=${dist()}`,
-        pin: true,
-        scrub: 0.8,
-        invalidateOnRefresh: true,
-        onUpdate: (s) => gsap.set("[data-services-progress]", { scaleX: s.progress }),
-      },
-    });
-    svcs.forEach((svc) => ScrollTrigger.create({ trigger: svc, containerAnimation: tween, start: "left 85%", once: true, onEnter: () => animateServiceVisual(svc) }));
-  } else {
-    svcs.forEach((svc) => ScrollTrigger.create({ trigger: svc, start: "top 80%", once: true, onEnter: () => animateServiceVisual(svc) }));
-  }
-});
-
-/* ---------------------------------------------------------------- */
-/* Process: scroll moves the playhead across an edit timeline       */
-/* ---------------------------------------------------------------- */
+/* ---------------- Process timeline ---------------- */
 
 const TL_SECONDS = 60;
 $("[data-ruler]").innerHTML = Array.from({ length: TL_SECONDS + 1 }, (_, s) => {
@@ -479,12 +235,10 @@ const clipEls = clips.map((c, ci) => {
   return el;
 });
 
-const copy = $("[data-process-copy]");
-copy.innerHTML = PROCESS.map((p, i) => `<div class="step"><h3><span class="tc">${pad(i + 1)}</span>${p.title}</h3><p>${p.body}</p></div>`).join("");
-const steps = $$(".step", copy);
+const stepsBox = $("[data-process-copy]");
+stepsBox.innerHTML = PROCESS.map((p, i) => `<div class="step"><h3><span class="tc">${pad(i + 1)}</span>${p.title}</h3><p>${p.body}</p></div>`).join("");
+const steps = $$(".step", stepsBox);
 const STEP_OUT = { clipPath: "inset(0% 0% 100% 0%)", y: 24 };
-gsap.set(steps.slice(1), STEP_OUT);
-
 let activeStep = 0;
 function setStep(i: number) {
   if (i === activeStep) return;
@@ -494,11 +248,9 @@ function setStep(i: number) {
   gsap.to(prev, { clipPath: "inset(0% 0% 100% 0%)", y: -24, duration: 0.45 * d, ease: "trace", overwrite: true });
   gsap.fromTo(steps[i], STEP_OUT, { clipPath: "inset(0% 0% -10% 0%)", y: 0, duration: 0.8 * d, ease: "trace", delay: 0.15 * d, overwrite: true });
 }
-
 const playhead = $("[data-playhead]");
 const processTc = $("[data-process-tc]");
 const lane = $(".tl__lane");
-
 function updateTimeline(p: number) {
   gsap.set(playhead, { x: p * lane.clientWidth });
   processTc.textContent = timecode(p * TL_SECONDS);
@@ -508,52 +260,461 @@ function updateTimeline(p: number) {
   setStep(idx);
 }
 
-ScrollTrigger.create({
-  trigger: ".process",
-  start: "top top",
-  end: "+=260%",
-  pin: true,
-  scrub: true,
-  onUpdate: (s) => updateTimeline(s.progress * 0.999),
-  onRefresh: (s) => updateTimeline(s.progress * 0.999),
-});
+/* ---------------- Statement words ---------------- */
 
-/* ---------------------------------------------------------------- */
-/* Footer end card, nav                                             */
-/* ---------------------------------------------------------------- */
+const statement = $("[data-scrub-words]");
+(function splitWords(node: Node) {
+  Array.from(node.childNodes).forEach((child) => {
+    if (child.nodeType !== Node.TEXT_NODE) return splitWords(child);
+    const frag = document.createDocumentFragment();
+    (child.textContent ?? "").split(/(\s+)/).forEach((part) => {
+      if (!part) return;
+      if (/^\s+$/.test(part)) return frag.append(part);
+      const s = document.createElement("span");
+      s.className = "w";
+      s.textContent = part;
+      frag.append(s);
+    });
+    child.replaceWith(frag);
+  });
+})(statement);
 
-const footMark = $("[data-draw='footer']");
-if (reduced) showDrawn(footMark);
-else ScrollTrigger.create({ trigger: footMark, start: "top 85%", once: true, onEnter: () => drawTimeline(footMark) });
+/* ---------------- Reel ---------------- */
+
+const reelMedia = $("[data-reel-media]");
+const reelEmbed = parseVideo(SITE.reel, true);
+if (reelEmbed.kind === "file") reelMedia.innerHTML = `<video src="${reelEmbed.src}" muted loop playsinline autoplay preload="metadata"></video>`;
+else $(".reel").classList.add("is-loop");
+const reelFrame = $(".reel__frame");
+const windowInset = () => {
+  const vw = reelFrame.clientWidth, vh = reelFrame.clientHeight;
+  const w = Math.min(vw * (vw < 760 ? 0.9 : 0.62), 1080);
+  const h = (w * 9) / 16;
+  const y = Math.max(0, (vh - h) / 2), x = (vw - w) / 2;
+  return `inset(${y}px ${x}px ${y}px ${x}px round 32px)`;
+};
+
+/* ================================================================ */
+/* Smooth scroll                                                    */
+/* ================================================================ */
+
+history.scrollRestoration = "manual";
+let lenis: Lenis | null = null;
+if (!reduced) {
+  lenis = new Lenis({ duration: 1.1, easing: (t) => 1 - Math.pow(1 - t, 4) });
+  lenis.on("scroll", ScrollTrigger.update);
+  gsap.ticker.add((time) => lenis!.raf(time * 1000));
+  gsap.ticker.lagSmoothing(0);
+}
+function scrollToY(target: number | HTMLElement, immediate = false) {
+  const offset = typeof target === "number" ? 0 : -navH() - 24;
+  if (lenis) lenis.scrollTo(target, { immediate, duration: 1.3, offset, force: true });
+  else if (typeof target === "number") window.scrollTo(0, target);
+  else window.scrollTo(0, target.getBoundingClientRect().top + window.scrollY + offset);
+}
+
+/* ================================================================ */
+/* Per-page behaviour. Each page builds its scroll effects on enter */
+/* and tears them down on leave, so pinned sections always measure  */
+/* against the page that is actually showing.                       */
+/* ================================================================ */
 
 const nav = $(".nav");
+let pageCtx: gsap.Context | null = null;
+let pageMM: gsap.MatchMedia | null = null;
+let riseIO: IntersectionObserver | null = null;
+
+function setupRise(view: HTMLElement) {
+  riseIO?.disconnect();
+  if (reduced || !("IntersectionObserver" in window)) return;
+  const els = [...$$("[data-reveal]", view), ...$$("[data-reveal]", $("#contact"))];
+  els.forEach((el) => el.classList.remove("below"));
+  const below = els.filter((el) => el.getBoundingClientRect().top > window.innerHeight);
+  below.forEach((el) => el.classList.add("below"));
+  riseIO = new IntersectionObserver(
+    (entries) => entries.forEach((en) => {
+      if (en.isIntersecting) { en.target.classList.remove("below"); riseIO?.unobserve(en.target); }
+    }),
+    { rootMargin: "0px 0px -8% 0px" },
+  );
+  below.forEach((el) => riseIO!.observe(el));
+}
+
+const ENTER: Record<Route, () => void> = {
+  home() {
+    const heroMark = $("[data-draw='hero']");
+    playMark(heroMark);
+    const liveTc = $("[data-live-tc]");
+    if (reduced) liveTc.textContent = "00:00:03:00";
+    else runTimecode(liveTc);
+
+    if (reelEmbed.kind !== "file") {
+      const loopMark = $("[data-draw='loop']");
+      const loopTc = $("[data-loop-tc]");
+      // Like the kit player: each time it comes into view, the mark draws on once, then holds still.
+      const play = () => { playMark(loopMark); runTimecode(loopTc); };
+      if (!reduced) loopMark.classList.add("pre");
+      ScrollTrigger.create({ trigger: ".reel", start: "top 40%", end: "bottom 60%", onEnter: play, onEnterBack: play });
+    }
+
+    if (reduced) {
+      gsap.set(reelFrame, { clipPath: windowInset() });
+      return;
+    }
+    gsap.timeline({ scrollTrigger: { trigger: ".reel", start: "top top", end: "+=140%", pin: true, scrub: 0.6, invalidateOnRefresh: true } })
+      .fromTo(reelFrame, { clipPath: windowInset }, { clipPath: "inset(0px 0px 0px 0px round 0px)", ease: "trace", duration: 1 })
+      .to(".reel__cap--l", { x: () => -window.innerWidth * 0.2, ease: "trace", duration: 0.6 }, 0)
+      .to(".reel__cap--r", { x: () => window.innerWidth * 0.2, ease: "trace", duration: 0.6 }, 0)
+      .to({}, { duration: 0.4 }); // then stillness
+
+    gsap.fromTo($$(".w", statement), { color: "#dcdcd7" }, {
+      color: (_i: number, el: Element) => (el.closest("em") ? "#ff4f1f" : "#101012"),
+      ease: "none",
+      stagger: 0.1,
+      scrollTrigger: { trigger: statement, start: "top 80%", end: "bottom 50%", scrub: true },
+    });
+  },
+
+  work() {},
+
+  services() {
+    if (!reduced) {
+      gsap.set($$(".vis-clips span", track), { scaleX: 0 });
+      gsap.set($$(".vis-phone span", track), { clipPath: "inset(100% 0% 0% 0% round 12px)" });
+      gsap.set($$(".vis-wave i", track), { scaleY: 0 });
+      $$(".vis-player__wm", track).forEach((el) => el.classList.add("pre"));
+    }
+    pageMM = gsap.matchMedia();
+    pageMM.add({ desktop: "(min-width: 761px)", mobile: "(max-width: 760px)" }, (ctx) => {
+      const { desktop } = ctx.conditions as { desktop: boolean };
+      if (reduced) return;
+      if (desktop) {
+        const dist = () => Math.max(0, track.scrollWidth - window.innerWidth);
+        const tween = gsap.to(track, {
+          x: () => -dist(),
+          ease: "none",
+          scrollTrigger: {
+            trigger: ".services", start: "top top", end: () => `+=${dist()}`, pin: true, scrub: 0.8, invalidateOnRefresh: true,
+            onUpdate: (s) => gsap.set("[data-services-progress]", { scaleX: s.progress }),
+          },
+        });
+        svcs.forEach((svc) => ScrollTrigger.create({ trigger: svc, containerAnimation: tween, start: "left 85%", once: true, onEnter: () => animateServiceVisual(svc) }));
+      } else {
+        svcs.forEach((svc) => ScrollTrigger.create({ trigger: svc, start: "top 80%", once: true, onEnter: () => animateServiceVisual(svc) }));
+      }
+    });
+  },
+
+  process() {
+    activeStep = 0;
+    gsap.set(steps[0], { clipPath: "inset(0% 0% -10% 0%)", y: 0 });
+    gsap.set(steps.slice(1), STEP_OUT);
+    ScrollTrigger.create({
+      trigger: ".process", start: "top top", end: "+=260%", pin: true, scrub: true,
+      onUpdate: (s) => updateTimeline(s.progress * 0.999),
+      onRefresh: (s) => updateTimeline(s.progress * 0.999),
+    });
+  },
+
+  about() {},
+};
+
+function enterPage(route: Route) {
+  const view = $(`[data-view="${route}"]`);
+  nav.dataset.theme = ROUTES[route].theme;
+  $$("[data-route-link]").forEach((a) => a.classList.toggle("is-active", a.dataset.routeLink === route));
+  document.title = route === "home" ? "Reyimation · Video editing & motion graphics" : `${ROUTES[route].title} · Reyimation`;
+
+  pageCtx = gsap.context(() => {
+    ENTER[route]();
+
+    // The nav takes the colour of whatever section sits under it.
+    [...$$("[data-nav]", view), $("#contact"), $(".foot")].forEach((section) => {
+      const parent = section.parentElement!;
+      ScrollTrigger.create({
+        trigger: parent.classList.contains("pin-spacer") ? parent : section,
+        start: () => `top ${navH() / 2}px`,
+        end: () => `bottom ${navH() / 2}px`,
+        onToggle: (s) => { if (s.isActive) nav.dataset.theme = section.dataset.nav!; },
+      });
+    });
+
+    // Footer end card draws on each time it comes into view, like the kit's player.
+    const footMark = $("[data-draw='footer']");
+    if (!reduced) footMark.classList.add("pre");
+    ScrollTrigger.create({ trigger: footMark, start: "top 85%", onEnter: () => playMark(footMark), onEnterBack: () => {} });
+  });
+
+  ScrollTrigger.refresh();
+  setupRise(view);
+}
+
+function leavePage() {
+  pageMM?.revert();
+  pageMM = null;
+  pageCtx?.revert();
+  pageCtx = null;
+}
+
+/* ================================================================ */
+/* Page transitions: one per destination, all in the kit's language */
+/* ================================================================ */
+
+type Transition = { build: (t: HTMLElement, r: Route) => string; cover: (t: HTMLElement) => gsap.core.Timeline; reveal: (t: HTMLElement) => gsap.core.Timeline };
+
+const titleBlock = (r: Route) => `<div class="transit__center"><span class="label transit__label">${ROUTES[r].num} / ${ROUTES[r].title}</span><p class="transit__title">${ROUTES[r].title}.</p></div>`;
+const TITLE_IN = { clipPath: "inset(0% 0% 100% 0%)", y: 40 };
+const TITLE_SHOWN = { clipPath: "inset(0% 0% -20% 0%)", y: 0 };
+
+const TRANSITIONS: Record<Route, Transition> = {
+  // Home: Night wipes up, the wordmark traces itself on (the kit's signature), then the curtain lifts.
+  home: {
+    build: () => `<div class="transit__panel"></div><div class="transit__center"><div class="transit__mark pre">${wordmark()}</div></div>`,
+    cover: (t) => {
+      const tl = gsap.timeline();
+      tl.fromTo($(".transit__panel", t), { clipPath: "inset(100% 0% 0% 0%)" }, { clipPath: "inset(0% 0% 0% 0%)", duration: 0.55, ease: "trace" })
+        .call(() => draw($(".transit__mark", t), 1.5), [], 0.3)
+        .to({}, { duration: drawDuration(1.5) - 0.2 });
+      return tl;
+    },
+    reveal: (t) => gsap.timeline().to([$(".transit__panel", t), $(".transit__center", t)], { clipPath: "inset(0% 0% 100% 0%)", duration: 0.6, ease: "trace" }),
+  },
+
+  // Work: a splice. Two Ink halves close like a shutter, a single Signal cut line flashes across, they part.
+  work: {
+    build: (_t, r) => `<div class="transit__half transit__half--top"></div><div class="transit__half transit__half--bottom"></div><div class="transit__cut"></div>${titleBlock(r)}`,
+    cover: (t) => {
+      const tl = gsap.timeline();
+      tl.fromTo($(".transit__half--top", t), { yPercent: -100 }, { yPercent: 0, duration: 0.5, ease: "trace" }, 0)
+        .fromTo($(".transit__half--bottom", t), { yPercent: 100 }, { yPercent: 0, duration: 0.5, ease: "trace" }, 0)
+        .fromTo($(".transit__cut", t), { scaleX: 0 }, { scaleX: 1, duration: 0.35, ease: "trace" }, 0.4)
+        .fromTo($(".transit__center", t).children, TITLE_IN, { ...TITLE_SHOWN, duration: 0.6, ease: "rise", stagger: 0.06 }, 0.45)
+        .to({}, { duration: 0.15 });
+      return tl;
+    },
+    reveal: (t) => {
+      const tl = gsap.timeline();
+      tl.to($(".transit__cut", t), { scaleX: 0, transformOrigin: "right", duration: 0.3, ease: "trace" }, 0)
+        .to($(".transit__center", t), { autoAlpha: 0, duration: 0.2 }, 0)
+        .to($(".transit__half--top", t), { yPercent: -100, duration: 0.55, ease: "trace" }, 0.1)
+        .to($(".transit__half--bottom", t), { yPercent: 100, duration: 0.55, ease: "trace" }, 0.1);
+      return tl;
+    },
+  },
+
+  // Services: a horizontal sweep, like scrubbing sideways through the services track.
+  services: {
+    build: (_t, r) => `<div class="transit__panel transit__panel--ink"></div>${titleBlock(r)}`,
+    cover: (t) => {
+      const tl = gsap.timeline();
+      tl.fromTo($(".transit__panel", t), { clipPath: "inset(0% 0% 0% 100%)" }, { clipPath: "inset(0% 0% 0% 0%)", duration: 0.6, ease: "trace" }, 0)
+        .fromTo($(".transit__center", t).children, { x: 120, clipPath: "inset(0% 0% 0% 100%)" }, { x: 0, clipPath: "inset(0% 0% 0% 0%)", duration: 0.7, ease: "rise", stagger: 0.05 }, 0.25)
+        .to({}, { duration: 0.15 });
+      return tl;
+    },
+    reveal: (t) => {
+      const tl = gsap.timeline();
+      tl.to($(".transit__center", t).children, { x: -120, clipPath: "inset(0% 100% 0% 0%)", duration: 0.5, ease: "trace", stagger: 0.04 }, 0)
+        .to($(".transit__panel", t), { clipPath: "inset(0% 100% 0% 0%)", duration: 0.6, ease: "trace" }, 0.1);
+      return tl;
+    },
+  },
+
+  // Process: a playhead. The Signal line scrubs across, laying Night down behind it with a running timecode,
+  // then scrubs again and lifts it off.
+  process: {
+    build: (_t, r) => `<div class="transit__panel"></div><span class="transit__tc tc">00:00:00:00</span>${titleBlock(r)}<div class="transit__playhead"></div>`,
+    cover: (t) => {
+      const panel = $(".transit__panel", t), head = $(".transit__playhead", t), tc = $(".transit__tc", t);
+      const p = { v: 0 };
+      const tl = gsap.timeline();
+      tl.to(p, {
+        v: 1, duration: 0.75, ease: "trace",
+        onUpdate: () => {
+          gsap.set(panel, { clipPath: `inset(0% ${(1 - p.v) * 100}% 0% 0%)` });
+          gsap.set(head, { x: p.v * window.innerWidth });
+          tc.textContent = timecode(p.v * 2);
+        },
+      })
+        .fromTo($(".transit__center", t).children, TITLE_IN, { ...TITLE_SHOWN, duration: 0.6, ease: "rise", stagger: 0.06 }, 0.45)
+        .set(head, { x: 0 })
+        .to({}, { duration: 0.1 });
+      return tl;
+    },
+    reveal: (t) => {
+      const panel = $(".transit__panel", t), head = $(".transit__playhead", t), center = $(".transit__center", t), tc = $(".transit__tc", t);
+      const p = { v: 0 };
+      return gsap.timeline().to(p, {
+        v: 1, duration: 0.75, ease: "trace",
+        onUpdate: () => {
+          const clip = `inset(0% 0% 0% ${p.v * 100}%)`;
+          gsap.set([panel, center, tc], { clipPath: clip });
+          gsap.set(head, { x: p.v * window.innerWidth });
+          tc.textContent = timecode(2 + p.v * 1);
+        },
+      });
+    },
+  },
+
+  // About: an iris that opens from the play button, the kit's "it's all in the i" detail.
+  about: {
+    build: (_t, r) => `<div class="transit__panel"></div><div class="transit__center"><span class="transit__play"></span><span class="label transit__label">${ROUTES[r].num} / ${ROUTES[r].title}</span><p class="transit__title">${ROUTES[r].title}.</p></div>`,
+    cover: (t) => {
+      const tl = gsap.timeline();
+      tl.fromTo($(".transit__panel", t), { clipPath: "circle(0% at 50% 50%)" }, { clipPath: "circle(75% at 50% 50%)", duration: 0.7, ease: "trace" }, 0)
+        .fromTo($(".transit__play", t), { scale: 0 }, { scale: 1, duration: 0.55, ease: "pop" }, 0.35)
+        .fromTo($$(".transit__center > :not(.transit__play)", t), TITLE_IN, { ...TITLE_SHOWN, duration: 0.6, ease: "rise", stagger: 0.06 }, 0.5)
+        .to({}, { duration: 0.15 });
+      return tl;
+    },
+    reveal: (t) => {
+      const tl = gsap.timeline();
+      tl.to($(".transit__center", t), { scale: 0.92, autoAlpha: 0, duration: 0.3, ease: "trace" }, 0)
+        .to($(".transit__panel", t), { clipPath: "circle(0% at 50% 50%)", duration: 0.65, ease: "trace" }, 0.05);
+      return tl;
+    },
+  },
+};
+
+/* ================================================================ */
+/* Router                                                           */
+/* ================================================================ */
+
+const transit = $("[data-transit]");
+let current: Route | null = null;
+let busy = false;
+
+function parseRoute(): Route {
+  const m = location.hash.match(/^#\/(\w+)/);
+  const r = (m?.[1] ?? "home") as Route;
+  return r in ROUTES ? r : "home";
+}
+
+function show(route: Route) {
+  if (current) leavePage();
+  $$(".view").forEach((v) => (v.hidden = v.dataset.view !== route));
+  current = route;
+  scrollToY(0, true);
+  enterPage(route);
+}
+
+async function go(route: Route) {
+  if (busy) return;
+  if (route === current) { scrollToY(0); return; }
+  if (reduced || !current) { show(route); return; }
+  busy = true;
+  lenis?.stop();
+  const t = TRANSITIONS[route];
+  transit.innerHTML = t.build(transit, route);
+  transit.classList.add("is-on");
+  await t.cover(transit);
+  show(route);
+  lenis?.start();
+  await t.reveal(transit);
+  transit.classList.remove("is-on");
+  transit.innerHTML = "";
+  busy = false;
+  if (parseRoute() !== current) go(parseRoute()); // a click landed mid-transition
+}
+
+document.addEventListener("click", (e) => {
+  const a = (e.target as Element).closest<HTMLAnchorElement>('a[href^="#"]');
+  if (!a) return;
+  const href = a.getAttribute("href")!;
+  if (href.startsWith("#/")) {
+    e.preventDefault();
+    const r = (href.slice(2) || "home") as Route;
+    if (r === current) { scrollToY(0); return; }
+    history.pushState(null, "", href === "#/" ? location.pathname : href);
+    go(r in ROUTES ? r : "home");
+    return;
+  }
+  e.preventDefault();
+  if (href === "#top") return scrollToY(0);
+  const target = document.querySelector<HTMLElement>(href);
+  if (target) scrollToY(target);
+});
+window.addEventListener("popstate", () => go(parseRoute()));
+
+/* ================================================================ */
+/* Video modal                                                      */
+/* ================================================================ */
+
+const modal = $("[data-modal]");
+const modalMedia = $("[data-modal-media]");
+let lastFocus: HTMLElement | null = null;
+
+function openVideo(title: string, meta: string, url: string, empty = ["Cut in progress.", "This one is still in the edit. Check back soon."]) {
+  lastFocus = document.activeElement as HTMLElement;
+  $("[data-modal-title]").textContent = title;
+  $("[data-modal-meta]").textContent = meta;
+  const v = parseVideo(url);
+  if (v.kind === "iframe") {
+    modalMedia.innerHTML = `<iframe src="${v.src}" title="${title}" allow="autoplay; fullscreen; picture-in-picture; encrypted-media" allowfullscreen></iframe>`;
+  } else if (v.kind === "file") {
+    modalMedia.innerHTML = `<video src="${v.src}" controls autoplay playsinline></video>`;
+  } else {
+    modalMedia.innerHTML = `<div class="modal__empty"><div class="modal__mark${reduced ? "" : " pre"}">${wordmark()}</div><b>${empty[0]}</b><span>${empty[1]}</span></div>`;
+    playMark($(".modal__mark", modalMedia));
+  }
+  modal.hidden = false;
+  lenis?.stop();
+  document.documentElement.style.overflow = "hidden";
+  if (!reduced) {
+    gsap.fromTo(".modal__back", { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.4 });
+    gsap.fromTo(".modal__box", { y: 40, clipPath: "inset(50% 0% 50% 0% round 20px)" }, { y: 0, clipPath: "inset(0% 0% 0% 0% round 0px)", duration: 0.9, ease: "trace", clearProps: "clipPath,transform" });
+  }
+  $<HTMLButtonElement>(".modal__close").focus();
+}
+
+function closeVideo() {
+  if (modal.hidden) return;
+  const done = () => {
+    modal.hidden = true;
+    modalMedia.innerHTML = "";
+    gsap.set([".modal__back", ".modal__box"], { clearProps: "all" });
+    lenis?.start();
+    document.documentElement.style.overflow = "";
+    lastFocus?.focus({ preventScroll: true });
+  };
+  if (reduced) return done();
+  gsap.to(".modal__box", { clipPath: "inset(50% 0% 50% 0% round 20px)", duration: 0.45, ease: "trace" });
+  gsap.to(".modal__back", { autoAlpha: 0, duration: 0.45, onComplete: done });
+}
+
+$$("[data-close]").forEach((el) => el.addEventListener("click", closeVideo));
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") closeVideo();
+  if (e.key === "Tab" && !modal.hidden) {
+    const f = $$<HTMLElement>("button, iframe, video, a[href]", modal);
+    if (!f.length) return;
+    const first = f[0], last = f[f.length - 1];
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+  }
+});
+
+$$("[data-play-reel]").forEach((b) =>
+  b.addEventListener("click", () =>
+    openVideo("Showreel 2026", `Reyimation · ${SITE.reelLength}`, SITE.reel, ["The 2026 reel is in the edit.", "Until it lands, the selected work shows the craft."]),
+  ),
+);
+
+/* ================================================================ */
+/* Nav mark, email, boot                                            */
+/* ================================================================ */
+
 const navBrand = $(".nav__brand");
-let navDraw: gsap.core.Timeline | null = null;
+let lastNavDraw = 0;
 if (!reduced) {
-  // The nav mark retraces itself on hover.
+  // The nav mark retraces itself on hover, at most once per draw.
   navBrand.addEventListener("mouseenter", () => {
-    if (navDraw?.isActive()) return;
-    navDraw = drawTimeline(navBrand);
+    if (performance.now() - lastNavDraw < drawDuration() * 1000) return;
+    lastNavDraw = performance.now();
+    draw(navBrand);
   });
 }
 
-const links = $$<HTMLAnchorElement>(".nav__links a");
-$$("[data-nav]").forEach((section) => {
-  // Pinned sections are measured by their spacer so the pin duration counts.
-  const parent = section.parentElement!;
-  ScrollTrigger.create({
-    trigger: parent.classList.contains("pin-spacer") ? parent : section,
-    start: `top ${NAV_H / 2}px`,
-    end: `bottom ${NAV_H / 2}px`,
-    onToggle: (s) => {
-      if (!s.isActive) return;
-      nav.dataset.theme = section.dataset.nav!;
-      links.forEach((a) => a.classList.toggle("is-active", a.getAttribute("href") === `#${section.id}`));
-    },
-  });
-});
-
-// Copy email.
 const toast = $("[data-toast]");
 let toastTimer = 0;
 $("[data-copy-email]").addEventListener("click", async () => {
@@ -568,12 +729,13 @@ $("[data-copy-email]").addEventListener("click", async () => {
   toastTimer = window.setTimeout(() => toast.classList.remove("is-on"), 1400);
 });
 
-if (import.meta.env.DEV) Object.assign(window, { ScrollTrigger, lenis });
+if (import.meta.env.DEV) Object.assign(window, { ScrollTrigger, lenis, goRoute: go });
 
-// Measure after Geist loads (line lengths change), then arm the rise on what is below the fold.
+// First paint: open whichever page the address points at, then re-measure once Geist is in.
+show(parseRoute());
 const ready = document.fonts ? document.fonts.ready : Promise.resolve();
 ready.then(() => {
   ScrollTrigger.refresh();
-  setupRise();
+  if (current) setupRise($(`[data-view="${current}"]`));
 });
 window.addEventListener("load", () => ScrollTrigger.refresh());
