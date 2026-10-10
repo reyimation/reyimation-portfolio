@@ -66,6 +66,7 @@ section { position: relative; }
 
 /* Reveal: lines wipe up from behind a mask (trace, don't fade) */
 [data-reveal] { will-change: transform, clip-path; }
+.motion [data-reveal]:not(.in) { clip-path: inset(-20% -6% 100% -6%); }
 
 /* Buttons */
 .btn {
@@ -92,7 +93,8 @@ section { position: relative; }
 .wm .dot { fill: currentColor; }
 .wm .ltr { stroke-dasharray: 1; stroke-dashoffset: 0; }
 [data-draw] .ltr { stroke-dashoffset: 1; }
-[data-draw] .tri, [data-draw] .dot { transform-box: fill-box; transform-origin: center; transform: scale(0); }
+/* Hidden until GSAP pops them; GSAP owns their SVG transform origin. */
+[data-draw] .tri, [data-draw] .dot { visibility: hidden; }
 
 /* ---------- Nav ---------- */
 .nav {
@@ -156,6 +158,7 @@ section { position: relative; }
 .reel__loopmark { width: min(56%, 820px); color: var(--paper); }
 .reel__tc { position: absolute; left: clamp(20px, 3vw, 40px); top: clamp(80px, 9vw, 96px); font-size: 13px; color: var(--stone-ink); font-variant-numeric: tabular-nums; }
 .reel__safe { position: absolute; inset: 9% 7%; border: 1px solid rgba(250, 250, 247, 0.07); border-radius: 4px; pointer-events: none; }
+.reel__wmk { position: absolute; right: clamp(20px, 3vw, 40px); bottom: clamp(20px, 3vw, 40px); width: clamp(28px, 3vw, 40px); height: auto; opacity: 0.6; }
 .reel__cap { position: absolute; top: 50%; z-index: 2; font-size: 12px; letter-spacing: 0.14em; color: var(--stone-ink); transform: translateY(-50%); }
 .reel__cap--l { left: var(--gutter); }
 .reel__cap--r { right: var(--gutter); }
@@ -187,7 +190,7 @@ section { position: relative; }
 .filters { display: flex; gap: 6px; padding: 5px; background: var(--mist); border-radius: 999px; flex-wrap: wrap; }
 .filters button { font-size: 14px; font-weight: 500; padding: 10px 16px; border-radius: 999px; color: var(--stone); transition: background-color 0.3s, color 0.3s; min-height: 40px; }
 .filters button:hover { color: var(--ink); }
-.filters button[aria-selected="true"] { background: var(--ink); color: var(--paper); }
+.filters button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
 
 .grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: clamp(14px, 1.6vw, 22px); }
 .card { grid-column: span 6; display: flex; flex-direction: column; gap: 16px; text-align: left; cursor: pointer; }
@@ -325,7 +328,10 @@ section { position: relative; }
 .clip--audio.is-on b { background: var(--stone-ink); }
 .tl__playhead { position: absolute; top: 0; bottom: 0; left: 44px; width: 2px; margin-left: -1px; background: var(--signal); pointer-events: none; will-change: transform; }
 .tl__playhead i { position: absolute; top: -2px; left: 50%; width: 14px; height: 16px; transform: translateX(-50%); background: var(--signal); clip-path: polygon(0 0, 100% 0, 100% 60%, 50% 100%, 0 60%); }
-@media (max-width: 560px) { .clip { font-size: 10px; padding: 0 6px; } }
+@media (max-width: 560px) {
+  .clip { font-size: 10px; padding: 0 6px; }
+  .process__copy { min-height: 168px; }
+}
 
 /* ---------- Tools ---------- */
 .tools { padding-block: clamp(120px, 16vw, 200px) clamp(60px, 8vw, 100px); background: var(--paper); }
@@ -371,6 +377,7 @@ section { position: relative; }
 .foot { background: var(--night); color: var(--paper); padding-block: 40px; }
 .foot__mark { width: 100%; color: var(--paper); padding-block: clamp(20px, 4vw, 60px); border-top: 1px solid var(--line-ink); }
 .foot__mark .wm { width: 100%; }
+.foot__end { font-size: 14px; color: var(--stone-ink); text-align: center; padding-bottom: clamp(32px, 5vw, 64px); margin-top: -8px; }
 .foot__row { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; font-size: 14px; color: var(--stone-ink); border-top: 1px solid var(--line-ink); padding-top: 22px; }
 .foot__row a:hover { color: var(--paper); }
 
@@ -397,7 +404,7 @@ section { position: relative; }
 /* ---------- Reduced motion ---------- */
 @media (prefers-reduced-motion: reduce) {
   [data-draw] .ltr { stroke-dashoffset: 0; }
-  [data-draw] .tri, [data-draw] .dot { transform: none; }
+  [data-draw] .tri, [data-draw] .dot { visibility: visible; }
   .rec, .bigi__tri { animation: none; }
   .btn, .card__media > *, .poster { transition: none; }
 }

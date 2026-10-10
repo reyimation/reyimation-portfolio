@@ -84,7 +84,9 @@ document.addEventListener("click", (e) => {
   const target = id === "#top" ? 0 : document.querySelector<HTMLElement>(id);
   if (target === null) return;
   e.preventDefault();
-  if (lenis) lenis.scrollTo(target, { duration: 1.4 });
+  // Pinned chapters sit at the very top; everything else clears the fixed nav.
+  const pinned = target !== 0 && target.parentElement?.classList.contains("pin-spacer");
+  if (lenis) lenis.scrollTo(target, { duration: 1.4, offset: pinned ? 0 : -56 });
   else if (target === 0) window.scrollTo(0, 0);
   else target.scrollIntoView();
 });
@@ -97,16 +99,17 @@ function drawTimeline(root: Element, opts: { delay?: number } = {}) {
   const ltr = $$("path.ltr", root);
   const tri = $(".tri", root);
   const dot = $(".dot", root);
+  // Kit timing: letters trace on 0.09 s apart over 1.1 s, the play button pops at 1.3 s, the dot at 1.45 s.
   const tl = gsap.timeline({ delay: opts.delay ?? 0 });
-  tl.fromTo(ltr, { strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: 1.1, ease: "trace", stagger: 0.09 })
-    .fromTo(tri, { scale: 0 }, { scale: 1, duration: 0.55, ease: "pop" }, "-=0.2")
-    .fromTo(dot, { scale: 0 }, { scale: 1, duration: 0.45, ease: "pop" }, "-=0.4");
+  tl.fromTo(ltr, { strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: 1.1, ease: "trace", stagger: 0.09 }, 0)
+    .fromTo(tri, { scale: 0, transformOrigin: "50% 50%", visibility: "visible" }, { scale: 1, duration: 0.55, ease: "pop", immediateRender: true }, 1.3)
+    .fromTo(dot, { scale: 0, transformOrigin: "50% 50%", visibility: "visible" }, { scale: 1, duration: 0.45, ease: "pop", immediateRender: true }, 1.45);
   return tl;
 }
 
 function showDrawn(root: Element) {
   gsap.set($$("path.ltr", root), { strokeDashoffset: 0 });
-  gsap.set([$(".tri", root), $(".dot", root)], { scale: 1 });
+  gsap.set([$(".tri", root), $(".dot", root)], { scale: 1, visibility: "visible" });
 }
 
 /* ---------------------------------------------------------------- */
@@ -117,7 +120,8 @@ const HIDDEN = { y: 44, clipPath: "inset(-20% -6% 100% -6%)" };
 const SHOWN = { y: 0, clipPath: "inset(-20% -6% -20% -6%)" };
 
 function reveal(targets: gsap.TweenTarget, vars: gsap.TweenVars = {}) {
-  return gsap.fromTo(targets, HIDDEN, {
+  // fromTo renders HIDDEN inline right away, so the pre-paint CSS mask can step aside.
+  const tween = gsap.fromTo(targets, HIDDEN, {
     ...SHOWN,
     duration: 1.1,
     ease: "expo.out",
@@ -125,6 +129,8 @@ function reveal(targets: gsap.TweenTarget, vars: gsap.TweenVars = {}) {
     clearProps: "clipPath,transform",
     ...vars,
   });
+  tween.targets<Element>().forEach((el) => el.classList.add("in"));
+  return tween;
 }
 
 /* ---------------------------------------------------------------- */
@@ -163,7 +169,7 @@ const modal = $("[data-modal]");
 const modalMedia = $("[data-modal-media]");
 let lastFocus: HTMLElement | null = null;
 
-function openVideo(title: string, meta: string, url: string) {
+function openVideo(title: string, meta: string, url: string, empty = ["Cut in progress.", "This one is still in the edit. Check back soon."]) {
   lastFocus = document.activeElement as HTMLElement;
   $("[data-modal-title]").textContent = title;
   $("[data-modal-meta]").textContent = meta;
@@ -173,7 +179,8 @@ function openVideo(title: string, meta: string, url: string) {
   } else if (v.kind === "file") {
     modalMedia.innerHTML = `<video src="${v.src}" controls autoplay playsinline></video>`;
   } else {
-    modalMedia.innerHTML = `<div class="modal__empty"><div style="width:min(320px,60%)">${wordmark()}</div><b>Cut in progress.</b><span>This one is still in the edit. Check back soon.</span></div>`;
+    modalMedia.innerHTML = `<div class="modal__empty"><div style="width:min(320px,60%)">${wordmark()}</div><b>${empty[0]}</b><span>${empty[1]}</span></div>`;
+    if (!reduced) drawTimeline(modalMedia, { delay: 0.2 });
   }
   modal.hidden = false;
   lenis?.stop();
@@ -213,7 +220,9 @@ document.addEventListener("keydown", (e) => {
 });
 
 $$("[data-play-reel]").forEach((b) =>
-  b.addEventListener("click", () => openVideo("Showreel 2026", `REYIMATION · ${SITE.reelLength}`, SITE.reel)),
+  b.addEventListener("click", () =>
+    openVideo("Showreel 2026", `REYIMATION · ${SITE.reelLength}`, SITE.reel, ["The 2026 reel is in the edit.", "Until it lands, the selected work below shows the craft."]),
+  ),
 );
 
 /* ---------------------------------------------------------------- */
@@ -365,11 +374,15 @@ cards.forEach((card) => {
 // Filters with a FLIP re-layout.
 const cats: ("All" | Category)[] = ["All", ...new Set(WORKS.map((w) => w.category))];
 const filters = $("[data-filters]");
-filters.innerHTML = cats.map((c, i) => `<button type="button" role="tab" aria-selected="${i === 0}">${c}</button>`).join("");
+filters.innerHTML = cats.map((c, i) => `<button type="button" aria-pressed="${i === 0}">${c}</button>`).join("");
 $$<HTMLButtonElement>("button", filters).forEach((btn) =>
   btn.addEventListener("click", () => {
     const cat = btn.textContent as "All" | Category;
-    $$("button", filters).forEach((b) => b.setAttribute("aria-selected", String(b === btn)));
+    if (btn.getAttribute("aria-pressed") === "true") return;
+    $$("button", filters).forEach((b) => b.setAttribute("aria-pressed", String(b === btn)));
+    // Finish any pending scroll reveal so Flip measures the real layout.
+    gsap.killTweensOf(cards);
+    gsap.set(cards, { clearProps: "clipPath,transform,opacity" });
     const state = Flip.getState(cards);
     cards.forEach((c, i) => {
       c.classList.toggle("is-hidden", cat !== "All" && c.dataset.cat !== cat);
@@ -557,6 +570,16 @@ if (!reduced) {
 
 // Nav adopts the colour of the section beneath it and marks the active link.
 const nav = $(".nav");
+
+// Hovering the nav logo replays its trace, the way the kit's mark arrives everywhere.
+const navBrand = $(".nav__brand");
+let navDraw: gsap.core.Timeline | null = null;
+if (!reduced) {
+  navBrand.addEventListener("mouseenter", () => {
+    if (navDraw?.isActive()) return;
+    navDraw = drawTimeline(navBrand).timeScale(1.6);
+  });
+}
 const links = $$<HTMLAnchorElement>(".nav__links a");
 $$("[data-nav]").forEach((section) => {
   // Pinned sections are measured by their spacer so the pin duration counts.
