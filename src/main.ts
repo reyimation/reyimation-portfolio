@@ -358,28 +358,37 @@ const ENTER: Record<Route, () => void> = {
     playMark(heroMark);
 
     if (reelEmbed.kind !== "file" && !reduced) {
-      // The reel mark is driven by a GSAP timeline with the kit's exact timing (letters 0.25 s + i × 0.09 s,
-      // 1.1 s trace; play button at 1.55 s; dot at 1.7 s). Unlike a CSS animation, a timeline can't be
-      // restarted by the browser re-rendering the pinned frame, which is what made phones show "re…",
-      // wipe it, and start again.
+      // The kit's draw-on, unchanged: same keyframes, curves, durations and delays as the CSS version
+      // (letters 1.1 s from 0.25 s + i × 0.09 s; play button 0.55 s at 1.55 s; dot 0.45 s at 1.7 s).
+      // It runs through the browser's Web Animations API instead of a CSS class, because a CSS animation is
+      // restarted whenever the pinned frame is re-attached while the page re-measures, which on phones is
+      // what showed "re…", wiped it, and drew it again. These animations carry on through that.
       const loopMark = $("[data-loop-mark]");
-      const ltr = $$("path.ltr", loopMark);
-      const pops = [$(".tri", loopMark), $(".dot", loopMark)];
-      gsap.set(ltr, { strokeDasharray: 1, strokeDashoffset: 1 });
-      gsap.set(pops, { scale: 0, transformOrigin: "50% 50%" });
-      const loop = gsap.timeline({ paused: true })
-        .to(ltr, { strokeDashoffset: 0, duration: 1.1, ease: "trace", stagger: 0.09 }, 0.25)
-        .to(pops[0], { scale: 1, duration: 0.55, ease: "pop" }, 1.55)
-        .to(pops[1], { scale: 1, duration: 0.45, ease: "pop" }, 1.7);
+      const ltr = $$<SVGPathElement>("path.ltr", loopMark);
+      const pops = [$<SVGElement>(".tri", loopMark), $<SVGElement>(".dot", loopMark)];
+      ltr.forEach((p) => { p.style.strokeDasharray = "1"; p.style.strokeDashoffset = "1"; });
+      pops.forEach((el) => Object.assign(el.style, { transformBox: "fill-box", transformOrigin: "center", transform: "scale(0)" }));
+      let running: Animation[] = [];
+      let busyUntil = 0;
+      const drawReel = () => {
+        running.forEach((a) => a.cancel());
+        const trace = "cubic-bezier(0.6, 0, 0.2, 1)", pop = "cubic-bezier(0.3, 1.6, 0.5, 1)";
+        running = [
+          ...ltr.map((p, i) => p.animate([{ strokeDashoffset: 1 }, { strokeDashoffset: 0 }], { duration: 1100, delay: 250 + i * 90, easing: trace, fill: "both" })),
+          pops[0].animate([{ transform: "scale(0)" }, { transform: "scale(1)" }], { duration: 550, delay: 1550, easing: pop, fill: "both" }),
+          pops[1].animate([{ transform: "scale(0)" }, { transform: "scale(1)" }], { duration: 450, delay: 1700, easing: pop, fill: "both" }),
+        ];
+        busyUntil = performance.now() + 2150;
+      };
 
-      // Plays in full every time you come back to the reel, from above or below. It re-arms only after the
-      // reel has left the screen, so the small bounce of a phone scroll at the edge never restarts it,
-      // and a draw that is under way is always allowed to finish.
+      // Plays in full each time you scroll to the reel, from above or from below. It re-arms only after the
+      // reel has left the screen, so a phone's scroll bounce at the edge never restarts it, and a draw that
+      // is under way always finishes.
       let armed = true;
       reelPlay = () => {
-        if (!armed || loop.isActive()) return;
+        if (!armed || performance.now() < busyUntil) return;
         armed = false;
-        loop.restart();
+        drawReel();
       };
       reelArm = () => (armed = true);
     }
@@ -554,12 +563,11 @@ const TRANSITIONS: Record<Route, Transition> = {
     },
   },
 
-  // Process: a playhead. The Signal line scrubs across, laying Night down behind it with a running timecode,
-  // then scrubs again and lifts it off.
+  // Process: a playhead. The Signal line scrubs across, laying Night down behind it, then scrubs again and lifts it off.
   process: {
-    build: (_t, r) => `<div class="transit__panel"></div><span class="transit__tc tc">00:00:00:00</span>${titleBlock(r)}<div class="transit__playhead"></div>`,
+    build: (_t, r) => `<div class="transit__panel"></div>${titleBlock(r)}<div class="transit__playhead"></div>`,
     cover: (t) => {
-      const panel = $(".transit__panel", t), head = $(".transit__playhead", t), tc = $(".transit__tc", t);
+      const panel = $(".transit__panel", t), head = $(".transit__playhead", t);
       const p = { v: 0 };
       const tl = gsap.timeline();
       tl.to(p, {
@@ -567,7 +575,6 @@ const TRANSITIONS: Record<Route, Transition> = {
         onUpdate: () => {
           gsap.set(panel, { clipPath: `inset(0% ${(1 - p.v) * 100}% 0% 0%)` });
           gsap.set(head, { x: p.v * window.innerWidth });
-          tc.textContent = timecode(p.v * 2);
         },
       })
         .fromTo($(".transit__center", t).children, TITLE_IN, { ...TITLE_SHOWN, duration: 0.6, ease: "rise", stagger: 0.06 }, 0.45)
@@ -576,15 +583,13 @@ const TRANSITIONS: Record<Route, Transition> = {
       return tl;
     },
     reveal: (t) => {
-      const panel = $(".transit__panel", t), head = $(".transit__playhead", t), center = $(".transit__center", t), tc = $(".transit__tc", t);
+      const panel = $(".transit__panel", t), head = $(".transit__playhead", t), center = $(".transit__center", t);
       const p = { v: 0 };
       return gsap.timeline().to(p, {
         v: 1, duration: 0.75, ease: "trace",
         onUpdate: () => {
-          const clip = `inset(0% 0% 0% ${p.v * 100}%)`;
-          gsap.set([panel, center, tc], { clipPath: clip });
+          gsap.set([panel, center], { clipPath: `inset(0% 0% 0% ${p.v * 100}%)` });
           gsap.set(head, { x: p.v * window.innerWidth });
-          tc.textContent = timecode(2 + p.v * 1);
         },
       });
     },
