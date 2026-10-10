@@ -66,8 +66,7 @@
             <div class="reel__frame">
               <div class="reel__media" data-reel-media>
                 <div class="reel__loop">
-                  <div class="reel__loopmark" data-wordmark data-draw="loop"></div>
-                  <span class="reel__tc tc" data-loop-tc>00:00:00:00</span>
+                  <div class="reel__loopmark" data-wordmark data-loop-mark></div>
                 </div>
               </div>
               <button class="reel__play" type="button" data-play-reel aria-label="Play showreel">
@@ -209,6 +208,9 @@
         </div>
       </div>
     </footer>
+
+    <!-- Shown if the connection drops: only the mark drawing on, then the page reloads when it's back -->
+    <div class="offline" data-offline hidden aria-hidden="true"><div class="offline__mark" data-wordmark data-draw="offline"></div></div>
 
     <!-- Page transition stage -->
     <div class="transit" data-transit aria-hidden="true"></div>

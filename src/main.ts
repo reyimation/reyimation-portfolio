@@ -347,32 +347,59 @@ function setupRise(view: HTMLElement) {
   below.forEach((el) => riseIO!.observe(el));
 }
 
+let reelPlay = () => {};
+let reelArm = () => {};
+
 const ENTER: Record<Route, () => void> = {
   home() {
+    reelPlay = () => {};
+    reelArm = () => {};
     const heroMark = $("[data-draw='hero']");
     playMark(heroMark);
 
-    if (reelEmbed.kind !== "file") {
-      const loopMark = $("[data-draw='loop']");
-      const loopTc = $("[data-loop-tc]");
-      // The mark draws on once per visit, then holds still. Playing only once stops phones from
-      // restarting it mid-draw when the address bar resizes the viewport while scrolling.
-      const play = () => { playMark(loopMark); runTimecode(loopTc); };
-      if (!reduced) loopMark.classList.add("pre");
-      // Start once the window has settled in the middle of the screen (the pin start), not while it is
-      // still sliding up from the bottom edge, which on phones made the draw look like it stopped and restarted.
-      ScrollTrigger.create({ trigger: ".reel", start: "top top", once: true, onEnter: play });
+    if (reelEmbed.kind !== "file" && !reduced) {
+      // The reel mark is driven by a GSAP timeline with the kit's exact timing (letters 0.25 s + i × 0.09 s,
+      // 1.1 s trace; play button at 1.55 s; dot at 1.7 s). Unlike a CSS animation, a timeline can't be
+      // restarted by the browser re-rendering the pinned frame, which is what made phones show "re…",
+      // wipe it, and start again.
+      const loopMark = $("[data-loop-mark]");
+      const ltr = $$("path.ltr", loopMark);
+      const pops = [$(".tri", loopMark), $(".dot", loopMark)];
+      gsap.set(ltr, { strokeDasharray: 1, strokeDashoffset: 1 });
+      gsap.set(pops, { scale: 0, transformOrigin: "50% 50%" });
+      const loop = gsap.timeline({ paused: true })
+        .to(ltr, { strokeDashoffset: 0, duration: 1.1, ease: "trace", stagger: 0.09 }, 0.25)
+        .to(pops[0], { scale: 1, duration: 0.55, ease: "pop" }, 1.55)
+        .to(pops[1], { scale: 1, duration: 0.45, ease: "pop" }, 1.7);
+
+      // Plays in full every time you come back to the reel, from above or below. It re-arms only after the
+      // reel has left the screen, so the small bounce of a phone scroll at the edge never restarts it,
+      // and a draw that is under way is always allowed to finish.
+      let armed = true;
+      reelPlay = () => {
+        if (!armed || loop.isActive()) return;
+        armed = false;
+        loop.restart();
+      };
+      reelArm = () => (armed = true);
     }
 
     if (reduced) {
       gsap.set(reelFrame, { clipPath: windowInset() });
       return;
     }
-    gsap.timeline({ scrollTrigger: { trigger: ".reel", start: "top top", end: "+=140%", pin: true, anticipatePin: 1, scrub: 0.6, invalidateOnRefresh: true } })
+    // The draw starts when the window settles in the middle of the screen (pin start) or when you scroll back into it.
+    gsap.timeline({ scrollTrigger: {
+      trigger: ".reel", start: "top top", end: "+=140%", pin: true, anticipatePin: 1, scrub: 0.6, invalidateOnRefresh: true,
+      onEnter: () => reelPlay(), onEnterBack: () => reelPlay(),
+    } })
       .fromTo(reelFrame, { clipPath: windowInset }, { clipPath: "inset(0px 0px 0px 0px round 0px)", ease: "trace", duration: 1 })
       .to(".reel__cap--l", { x: () => -window.innerWidth * 0.2, ease: "trace", duration: 0.6 }, 0)
       .to(".reel__cap--r", { x: () => window.innerWidth * 0.2, ease: "trace", duration: 0.6 }, 0)
       .to({}, { duration: 0.4 }); // then stillness
+
+    // Re-arm the reel draw only once its whole pinned stretch has left the screen.
+    ScrollTrigger.create({ trigger: $(".reel").parentElement!, start: "top bottom", end: "bottom top", onLeave: () => reelArm(), onLeaveBack: () => reelArm() });
 
     gsap.fromTo($$(".w", statement), { color: "#dcdcd7" }, {
       color: (_i: number, el: Element) => (el.closest("em") ? "#ff4f1f" : "#101012"),
@@ -751,6 +778,28 @@ $("[data-copy-email]").addEventListener("click", async (e) => {
   clearTimeout(toastTimer);
   toastTimer = window.setTimeout(() => toast.classList.remove("is-on"), 1400);
 });
+
+/* ================================================================ */
+/* Offline: no error text, just the mark drawing on; reload when    */
+/* the connection is back.                                          */
+/* ================================================================ */
+
+const offline = $("[data-offline]");
+function showOffline() {
+  if (!offline.hidden) return;
+  offline.hidden = false;
+  lenis?.stop();
+  playMark($(".offline__mark", offline));
+}
+window.addEventListener("offline", showOffline);
+window.addEventListener("online", () => { if (!offline.hidden) location.reload(); });
+if (!navigator.onLine) showOffline();
+
+// The service worker keeps the site and an offline page cached, so opening or reloading it without a
+// connection shows the same mark instead of the browser's error screen.
+if (import.meta.env.PROD && "serviceWorker" in navigator) {
+  window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js").catch(() => {}));
+}
 
 if (import.meta.env.DEV) Object.assign(window, { ScrollTrigger, lenis, goRoute: go });
 

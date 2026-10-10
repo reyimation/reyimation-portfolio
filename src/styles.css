@@ -145,6 +145,10 @@ a, button, [role="button"] { -webkit-tap-highlight-color: transparent; }
   .nav__in { height: 52px; }
 }
 
+/* ---------- Offline ---------- */
+.offline { position: fixed; inset: 0; z-index: 100; background: var(--night); display: grid; place-items: center; }
+.offline__mark { width: min(520px, 72vw); color: var(--paper); }
+
 /* ---------- Page transitions ---------- */
 .transit { position: fixed; inset: 0; z-index: 70; pointer-events: none; visibility: hidden; }
 .transit.is-on { visibility: visible; pointer-events: auto; }
