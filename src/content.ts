@@ -65,6 +65,28 @@ export type Work = {
  * with real projects. Order matters: the first item gets the large tile.
  */
 export const WORKS: Work[] = [
+  {
+    title: "Overnighter",
+    client: "Automotive commercial",
+    category: "Editing",
+    year: 2026,
+    duration: "00:52",
+    summary: "A widebody GT86 from golden hour to the parking deck, cut to the beat with rolling shots and night light.",
+    video: "work/overnighter.mp4",
+    poster: "work/overnighter.jpg",
+    preview: "work/overnighter-preview.mp4",
+  },
+  {
+    title: "Between Pine & Sea",
+    client: "Real estate film",
+    category: "Editing",
+    year: 2026,
+    duration: "01:03",
+    summary: "A modern home between the pines and the water, walked through in one breath: architecture, open-plan living and the view.",
+    video: "work/between-pine-and-sea.mp4",
+    poster: "work/between-pine-and-sea.jpg",
+    preview: "work/between-pine-and-sea-preview.mp4",
+  },
   { title: "Brand film in 60 seconds", client: "Client name", category: "Editing", year: 2026, duration: "01:00", summary: "Interviews, b-roll and a sound bed cut down to a single idea.", video: "" },
   { title: "Logo reveal", client: "Client name", category: "Motion", year: 2026, duration: "00:08", summary: "A line-drawn mark that traces itself on, then lands.", video: "" },
   { title: "YouTube long-form", client: "Client name", category: "Editing", year: 2026, duration: "12:48", summary: "Retention-first edit with pattern interrupts, captions and sound design.", video: "" },

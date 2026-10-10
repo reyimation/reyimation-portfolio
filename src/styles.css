@@ -275,8 +275,24 @@ a, button, [role="button"] { -webkit-tap-highlight-color: transparent; }
 .card.is-lead .card__media { aspect-ratio: 21 / 9; }
 .card__media > img, .card__media > video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform 1s var(--rise); }
 .card:hover .card__media > img, .card:hover .card__media > video { transform: scale(1.015); }
-.card__media video { visibility: hidden; }
+.card__media > img { z-index: 0; }
+.card__media video { visibility: hidden; z-index: 1; }
 .card.is-playing .card__media video { visibility: visible; }
+
+/* Thumbnail overlay for real projects: fade at the foot, tag, name, Watch cue. */
+.thumb { position: absolute; inset: 0; z-index: 2; display: flex; flex-direction: column; justify-content: flex-end; align-items: flex-start; gap: 10px; padding: clamp(18px, 3vw, 36px); color: var(--paper); background: linear-gradient(180deg, rgba(0, 0, 0, 0) 38%, rgba(0, 0, 0, 0.72) 100%); pointer-events: none; }
+.thumb__tag { color: rgba(250, 250, 247, 0.78); }
+.thumb__title { font-size: clamp(30px, 4.2vw, 56px); line-height: 0.98; font-weight: 700; letter-spacing: -0.04em; max-width: 12ch; text-shadow: 0 2px 24px rgba(0, 0, 0, 0.35); }
+.card.is-lead .thumb__title { font-size: clamp(36px, 6vw, 84px); }
+.thumb__watch {
+  position: absolute; right: clamp(16px, 2.4vw, 28px); bottom: clamp(16px, 2.4vw, 28px);
+  display: inline-flex; align-items: center; gap: 8px; padding: 10px 15px 10px 13px; border-radius: 999px;
+  font: 500 14px/1 var(--sans); background: rgba(250, 250, 247, 0.16); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  transition: opacity 0.3s;
+}
+.thumb__watch i { width: 0; height: 0; border-style: solid; border-width: 5px 0 5px 9px; border-color: transparent transparent transparent var(--paper); }
+.card:hover .thumb__watch, .card:focus-visible .thumb__watch { opacity: 0; }
+@media (max-width: 560px) { .thumb__watch { padding: 8px 12px 8px 11px; font-size: 13px; } }
 
 /* Drawn poster (kit "YouTube thumbnail" tile), used until a real poster is added */
 .poster { position: absolute; inset: 0; padding: clamp(18px, 3vw, 36px); display: flex; flex-direction: column; justify-content: space-between; }
@@ -286,13 +302,12 @@ a, button, [role="button"] { -webkit-tap-highlight-color: transparent; }
 .poster__wave { position: absolute; right: clamp(18px, 3vw, 36px); bottom: clamp(18px, 3vw, 36px); width: 40%; height: 32%; display: flex; align-items: center; gap: 3px; }
 .poster__wave i { flex: 1; background: rgba(250, 250, 247, 0.18); border-radius: 2px; transform-origin: center; }
 .card__play {
-  position: absolute; left: 50%; top: 50%; z-index: 2; width: 64px; aspect-ratio: 1; border-radius: 50%;
+  position: absolute; left: 50%; top: 50%; z-index: 3; width: 64px; aspect-ratio: 1; border-radius: 50%;
   background: var(--signal); display: grid; place-items: center;
   transform: translate(-50%, -50%) scale(0); transition: transform 0.55s cubic-bezier(0.3, 1.6, 0.5, 1);
 }
 .card__play i { width: 0; height: 0; border-style: solid; border-width: 9px 0 9px 15px; border-color: transparent transparent transparent var(--ink); margin-left: 4px; }
 .card:hover .card__play, .card:focus-visible .card__play { transform: translate(-50%, -50%) scale(1); }
-.card__dur { position: absolute; right: 14px; top: 14px; z-index: 2; font-size: 13px; background: rgba(0, 0, 0, 0.6); color: var(--paper); padding: 5px 7px; border-radius: 5px; }
 .card__body { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; padding-inline: 4px; }
 .card__title { font-size: 22px; line-height: 1.2; letter-spacing: -0.02em; }
 .card__sub { font-size: 15px; color: var(--stone); margin-top: 4px; }

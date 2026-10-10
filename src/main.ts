@@ -113,7 +113,10 @@ function rand(seed: number) {
 }
 
 function poster(w: Work, i: number): string {
-  if (w.poster) return `<img src="${w.poster}" alt="" loading="lazy">`;
+  // A real thumbnail: the frame, a soft fade at the foot, what it is, the name, and a Watch cue.
+  if (w.poster) {
+    return `<img src="${w.poster}" alt="" loading="lazy" decoding="async"><div class="thumb"><span class="label thumb__tag">${w.client}</span><p class="thumb__title">${w.title}.</p><span class="thumb__watch"><i aria-hidden="true"></i>Watch</span></div>`;
+  }
   const r = rand(i + 3);
   const bars = Array.from({ length: 30 }, (_, k) => `<i style="height:${Math.min(100, 18 + Math.round(Math.abs(Math.sin(k * 0.5 + i)) * 60 + r() * 22))}%"></i>`).join("");
   return `<div class="poster"><span class="poster__top label">${pad(i + 1)} · ${w.category}</span><p class="poster__title">${w.title}</p><div class="poster__wave">${bars}</div></div>`;
@@ -124,7 +127,7 @@ grid.innerHTML = WORKS.map((w, i) => {
   const preview = w.preview ? `<video src="${w.preview}" muted loop playsinline preload="none"></video>` : "";
   return `<div class="card${i === 0 ? " is-lead" : ""}" data-cat="${w.category}" data-i="${i}" tabindex="0" role="button" aria-label="Play ${w.title}">
     <div class="card__in" data-reveal>
-      <div class="card__media">${poster(w, i)}${preview}<span class="card__dur tc">${w.duration}</span><span class="card__play" aria-hidden="true"><i></i></span></div>
+      <div class="card__media">${preview}${poster(w, i)}<span class="card__play" aria-hidden="true"><i></i></span></div>
       <div class="card__body"><div><h3 class="card__title">${w.title}</h3><p class="card__sub">${w.client} · ${w.year}</p></div><span class="card__cat label">${w.category}</span></div>
     </div>
   </div>`;
@@ -133,7 +136,7 @@ grid.innerHTML = WORKS.map((w, i) => {
 const cards = $$(".card", grid);
 cards.forEach((card) => {
   const w = WORKS[Number(card.dataset.i)];
-  const open = () => openVideo(w.title, `${w.client} · ${w.year} · ${w.duration}`, w.video);
+  const open = () => openVideo(w.title, `${w.client} · ${w.year} · ${w.duration}`, w.video, undefined, w.poster);
   card.addEventListener("click", open);
   card.addEventListener("keydown", (e) => {
     if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open(); }
@@ -693,7 +696,7 @@ const modal = $("[data-modal]");
 const modalMedia = $("[data-modal-media]");
 let lastFocus: HTMLElement | null = null;
 
-function openVideo(title: string, meta: string, url: string, empty = ["Cut in progress.", "This one is still in the edit. Check back soon."]) {
+function openVideo(title: string, meta: string, url: string, empty = ["Cut in progress.", "This one is still in the edit. Check back soon."], poster = "") {
   lastFocus = document.activeElement as HTMLElement;
   $("[data-modal-title]").textContent = title;
   $("[data-modal-meta]").textContent = meta;
@@ -701,7 +704,7 @@ function openVideo(title: string, meta: string, url: string, empty = ["Cut in pr
   if (v.kind === "iframe") {
     modalMedia.innerHTML = `<iframe src="${v.src}" title="${title}" allow="autoplay; fullscreen; picture-in-picture; encrypted-media" allowfullscreen></iframe>`;
   } else if (v.kind === "file") {
-    modalMedia.innerHTML = `<video src="${v.src}" controls autoplay playsinline></video>`;
+    modalMedia.innerHTML = `<video src="${v.src}"${poster ? ` poster="${poster}"` : ""} controls autoplay playsinline preload="auto"></video>`;
   } else {
     modalMedia.innerHTML = `<div class="modal__empty"><div class="modal__mark${reduced ? "" : " pre"}">${wordmark()}</div><b>${empty[0]}</b><span>${empty[1]}</span></div>`;
     playMark($(".modal__mark", modalMedia));
