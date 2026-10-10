@@ -7,6 +7,7 @@ import Lenis from "lenis";
 import { SITE, WORKS, SERVICES, PROCESS, TOOLS, type Work, type Category } from "./content";
 import { wordmark, draw, drawDuration } from "./wordmark";
 import { parseVideo } from "./embed";
+import { startFavicon } from "./favicon";
 
 gsap.registerPlugin(ScrollTrigger, Flip, CustomEase);
 
@@ -482,7 +483,7 @@ function enterPage(route: Route) {
   const view = $(`[data-view="${route}"]`);
   nav.dataset.theme = ROUTES[route].theme;
   $$("[data-route-link]").forEach((a) => a.classList.toggle("is-active", a.dataset.routeLink === route));
-  document.title = route === "home" ? "Reyimation · Video editing & motion graphics" : `${ROUTES[route].title} · Reyimation`;
+  document.title = "Reyimation";
 
   pageCtx = gsap.context(() => {
     ENTER[route]();
@@ -639,11 +640,17 @@ const transit = $("[data-transit]");
 let current: Route | null = null;
 let busy = false;
 
+// The address bar always stays plain (reyimation.com). The page lives in history.state, so Back and
+// Forward still move between pages; an old link with #/work still opens Work, then the # is cleaned off.
+let wanted: Route = "home";
+function asRoute(r: unknown): Route {
+  return typeof r === "string" && r in ROUTES ? (r as Route) : "home";
+}
 function parseRoute(): Route {
   const m = location.hash.match(/^#\/(\w+)/);
-  const r = (m?.[1] ?? "home") as Route;
-  return r in ROUTES ? r : "home";
+  return asRoute(m?.[1] ?? "home");
 }
+const cleanURL = () => location.pathname;
 
 function show(route: Route) {
   if (current) leavePage();
@@ -669,7 +676,7 @@ async function go(route: Route) {
   transit.classList.remove("is-on");
   transit.innerHTML = "";
   busy = false;
-  if (parseRoute() !== current) go(parseRoute()); // a click landed mid-transition
+  if (wanted !== current) go(wanted); // a click landed mid-transition
 }
 
 document.addEventListener("click", (e) => {
@@ -678,10 +685,11 @@ document.addEventListener("click", (e) => {
   const href = a.getAttribute("href")!;
   if (href.startsWith("#/")) {
     e.preventDefault();
-    const r = (href.slice(2) || "home") as Route;
+    const r = asRoute(href.slice(2) || "home");
     if (r === current) { scrollToY(0); return; }
-    history.pushState(null, "", href === "#/" ? location.pathname : href);
-    go(r in ROUTES ? r : "home");
+    wanted = r;
+    history.pushState({ route: r }, "", cleanURL());
+    go(r);
     return;
   }
   e.preventDefault();
@@ -689,7 +697,11 @@ document.addEventListener("click", (e) => {
   const target = document.querySelector<HTMLElement>(href);
   if (target) scrollToY(target);
 });
-window.addEventListener("popstate", () => go(parseRoute()));
+window.addEventListener("popstate", (e) => {
+  wanted = e.state?.route ? asRoute(e.state.route) : parseRoute();
+  if (location.hash) history.replaceState({ route: wanted }, "", cleanURL());
+  go(wanted);
+});
 
 /* ================================================================ */
 /* Video modal                                                      */
@@ -824,8 +836,11 @@ if (import.meta.env.PROD && "serviceWorker" in navigator) {
 
 if (import.meta.env.DEV) Object.assign(window, { ScrollTrigger, lenis, goRoute: go });
 
-// First paint: open whichever page the address points at, then re-measure once Geist is in.
-show(parseRoute());
+// First paint: open the page we were on (a reload keeps it) or an old #/ link, with a plain address bar.
+wanted = history.state?.route ? asRoute(history.state.route) : parseRoute();
+history.replaceState({ route: wanted }, "", cleanURL());
+show(wanted);
+startFavicon();
 const ready = document.fonts ? document.fonts.ready : Promise.resolve();
 ready.then(() => {
   ScrollTrigger.refresh();
