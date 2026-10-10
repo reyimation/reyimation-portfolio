@@ -138,9 +138,13 @@ a, button, [role="button"] { -webkit-tap-highlight-color: transparent; }
 @media (max-width: 720px) {
   .nav__links { display: none; }
   /* Phones: the four pages sit in a second row under the bar. */
-  .nav__mobile { display: flex; justify-content: space-between; gap: 8px; padding: 0 var(--gutter) 10px; font-size: 13px; }
-  .nav__mobile a { color: var(--nav-muted); padding: 6px 0; }
-  .nav__mobile a.is-active { color: inherit; }
+  /* Phones: the four pages as clear chips, grouped close together; the current page is filled. */
+  .nav__mobile { display: flex; justify-content: center; gap: 6px; padding: 0 var(--gutter) 10px; }
+  .nav__mobile a { font: 500 13px/1 var(--sans); color: inherit; padding: 8px 13px; border-radius: 999px; transition: background-color 0.3s, color 0.3s; }
+  .nav[data-theme="dark"] .nav__mobile a { background: rgba(250, 250, 247, 0.12); }
+  .nav[data-theme="light"] .nav__mobile a { background: rgba(16, 16, 18, 0.07); }
+  .nav[data-theme="dark"] .nav__mobile a.is-active { background: var(--paper); color: var(--ink); }
+  .nav[data-theme="light"] .nav__mobile a.is-active { background: var(--ink); color: var(--paper); }
   :root { --nav-h: 88px; }
   .nav__in { height: 52px; }
 }
@@ -435,7 +439,12 @@ a, button, [role="button"] { -webkit-tap-highlight-color: transparent; }
 .foot .wrap { display: flex; flex-direction: column; gap: 40px; }
 .foot__card { display: flex; flex-direction: column; align-items: center; gap: 18px; padding-block: clamp(56px, 8vw, 96px); border-top: 1px solid var(--line-ink); }
 .foot__mark { width: min(520px, 80%); color: var(--paper); }
-.foot__end { font: 400 14px/1 var(--mono); color: var(--stone-ink); }
+.foot__social { display: flex; gap: 12px; }
+.foot__social a { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; color: var(--stone-ink); box-shadow: inset 0 0 0 1px var(--line-ink); transition: color 0.3s, background-color 0.3s, box-shadow 0.3s; }
+.foot__social a:hover { color: var(--ink); background: var(--paper); box-shadow: inset 0 0 0 1px var(--paper); }
+.foot__social svg { width: 20px; height: 20px; }
+/* "Book a call" is a label for now, not a link. */
+span.pill, span.btn { cursor: default; }
 .foot__row { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; font-size: 14px; color: var(--stone-ink); border-top: 1px solid var(--line-ink); padding-top: 24px; }
 .foot__row a { text-decoration: underline; text-underline-offset: 4px; text-decoration-color: var(--stone-ink); }
 .foot__row a:hover { color: var(--paper); }

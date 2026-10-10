@@ -27,6 +27,16 @@ export const SITE = {
     { label: "Behance", url: "" },
     { label: "Fiverr", url: "" },
   ],
+
+  /**
+   * Icons under the wordmark in the footer. Check these point to your profiles and change any
+   * that don't. Add more later in the same shape (the icon key must be one of the three below).
+   */
+  profiles: [
+    { icon: "linkedin", label: "LinkedIn", url: "https://www.linkedin.com/in/reyimation" },
+    { icon: "instagram", label: "Instagram", url: "https://www.instagram.com/reyimation" },
+    { icon: "youtube", label: "YouTube", url: "https://www.youtube.com/@reyimation" },
+  ],
 };
 
 export type Category = "Editing" | "Motion" | "Short-form";

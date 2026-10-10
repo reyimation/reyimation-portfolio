@@ -66,7 +66,16 @@ $$("[data-wordmark]").forEach((el) => {
 $$("[data-email]").forEach((el) => (el.textContent = SITE.email));
 $("[data-location]").textContent = SITE.location;
 $("[data-year]").textContent = String(new Date().getFullYear());
-$<HTMLAnchorElement>("[data-mailto]").href = `mailto:${SITE.email}?subject=${encodeURIComponent("New project for Reyimation")}`;
+
+const ICONS: Record<string, string> = {
+  linkedin: `<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M5.4 3.6a2.1 2.1 0 1 1-4.2 0 2.1 2.1 0 0 1 4.2 0zM1.4 8.2h3.8V21H1.4zM8 8.2h3.6v1.8h.1c.5-.9 1.7-2.1 3.6-2.1 3.9 0 4.6 2.5 4.6 5.8V21H16v-6.3c0-1.5 0-3.4-2.1-3.4s-2.4 1.6-2.4 3.3V21H8z"/></svg>`,
+  instagram: `<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4.2"/><circle cx="17.4" cy="6.6" r="1.1" fill="currentColor" stroke="none"/></svg>`,
+  youtube: `<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="M22.5 7.2a2.8 2.8 0 0 0-2-2C18.8 4.7 12 4.7 12 4.7s-6.8 0-8.5.5a2.8 2.8 0 0 0-2 2A29 29 0 0 0 1 12a29 29 0 0 0 .5 4.8 2.8 2.8 0 0 0 2 2c1.7.5 8.5.5 8.5.5s6.8 0 8.5-.5a2.8 2.8 0 0 0 2-2A29 29 0 0 0 23 12a29 29 0 0 0-.5-4.8zM9.8 15.1V8.9l5.4 3.1z"/></svg>`,
+};
+$("[data-profiles]").innerHTML = SITE.profiles
+  .filter((p) => p.url && ICONS[p.icon])
+  .map((p) => `<li><a href="${p.url}" target="_blank" rel="noopener" aria-label="${p.label}">${ICONS[p.icon]}</a></li>`)
+  .join("");
 
 const cv = $<HTMLAnchorElement>("[data-cv]");
 if (SITE.cv) Object.assign(cv, { href: SITE.cv, target: "_blank", rel: "noopener", hidden: false });
