@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Reyimation · Video editing & motion graphics</title>
+    <meta name="description" content="Reyimation is the portfolio of a video editor and motion designer. Brand films, YouTube edits, motion graphics and short-form. Light, in motion." />
+    <meta name="theme-color" content="#000000" />
+    <meta property="og:title" content="Reyimation · Light, in motion." />
+    <meta property="og:description" content="Video editing and motion graphics. Every frame earns its cut." />
+    <meta property="og:type" content="website" />
+    <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  </head>
+  <body>
+    <a class="skip" href="#work">Skip to work</a>
+
+    <!-- Navigation -->
+    <header class="nav" data-theme="dark">
+      <div class="wrap nav__in">
+        <a class="nav__brand" href="#top" aria-label="Reyimation, back to top" data-wordmark></a>
+        <nav aria-label="Primary">
+          <ul class="nav__links">
+            <li><a href="#work">Work</a></li>
+            <li><a href="#services">Services</a></li>
+            <li><a href="#process">Process</a></li>
+            <li><a href="#about">About</a></li>
+          </ul>
+        </nav>
+        <a class="pill" href="#contact">Hire me</a>
+      </div>
+    </header>
+
+    <main>
+      <!-- Hero -->
+      <section class="hero" id="top" data-nav="dark">
+        <div class="hero__glow" aria-hidden="true"></div>
+        <div class="wrap hero__in">
+          <p class="eyebrow hero__eyebrow" data-reveal>Video editor &amp; motion designer</p>
+          <h1 class="sr-only">Reyimation</h1>
+          <div class="hero__mark" data-wordmark data-draw="hero"></div>
+          <p class="hero__title" data-reveal>Light, in motion.</p>
+          <p class="lede hero__lede" data-reveal>Brand films, YouTube edits, motion graphics and short-form. Cut for story, timed to the frame.</p>
+          <div class="cta" data-reveal>
+            <button class="btn btn--signal" type="button" data-play-reel>
+              <span class="btn__tri" aria-hidden="true"></span> Watch the reel
+            </button>
+            <a class="btn btn--ghost" href="#work">See the work</a>
+          </div>
+        </div>
+        <div class="wrap hero__meta mono" aria-hidden="true">
+          <span>TC <b data-live-tc>00:00:00:00</b></span>
+          <span class="hide-sm">3840×2160 · 25 FPS</span>
+          <span>REC <i class="rec"></i></span>
+        </div>
+      </section>
+
+      <!-- Showreel: frame grows to full-bleed on scroll -->
+      <section class="reel" id="reel" data-nav="dark">
+        <div class="reel__pin">
+          <div class="reel__cap reel__cap--l mono">SHOWREEL</div>
+          <div class="reel__cap reel__cap--r mono">2026 · <span data-reel-length></span></div>
+          <div class="reel__frame">
+            <div class="reel__media" data-reel-media>
+              <div class="reel__loop">
+                <div class="reel__loopmark" data-wordmark data-draw="loop"></div>
+                <span class="reel__tc mono" data-loop-tc>00:00:00:00</span>
+                <span class="reel__safe" aria-hidden="true"></span>
+              </div>
+            </div>
+            <button class="reel__play" type="button" data-play-reel aria-label="Play showreel">
+              <span class="reel__pill"><i aria-hidden="true"></i>Play reel</span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Statement -->
+      <section class="statement" data-nav="light">
+        <div class="wrap">
+          <p class="eyebrow" data-reveal>The approach</p>
+          <p class="statement__text" data-scrub-words>
+            I don't just cut footage. I find the rhythm inside it: the beat where a story lands, the frame where a brand becomes a feeling, the moment a viewer <em>leans in.</em>
+          </p>
+        </div>
+      </section>
+
+      <!-- Work -->
+      <section class="work" id="work" data-nav="light">
+        <div class="wrap">
+          <div class="work__head">
+            <div>
+              <p class="eyebrow" data-reveal>Selected work</p>
+              <h2 class="h-l" data-reveal>Every frame<br />earns its cut.</h2>
+            </div>
+            <div class="filters" role="tablist" aria-label="Filter work" data-filters></div>
+          </div>
+          <div class="grid" data-works></div>
+        </div>
+      </section>
+
+      <!-- Services: horizontal pinned track -->
+      <section class="services" id="services" data-nav="dark">
+        <div class="services__pin">
+          <div class="wrap services__head">
+            <p class="eyebrow" data-reveal>Services</p>
+            <h2 class="h-l" data-reveal>What I make.</h2>
+          </div>
+          <div class="services__track" data-services></div>
+          <div class="wrap services__bar" aria-hidden="true"><i data-services-progress></i></div>
+        </div>
+      </section>
+
+      <!-- Process: an edit timeline scrubbed by scroll -->
+      <section class="process" id="process" data-nav="dark">
+        <div class="process__pin">
+          <div class="wrap">
+            <div class="process__top">
+              <div>
+                <p class="eyebrow" data-reveal>Process</p>
+                <h2 class="h-l" data-reveal>From footage<br />to final.</h2>
+              </div>
+              <div class="process__tc mono" aria-hidden="true"><span data-process-tc>00:00:00:00</span></div>
+            </div>
+            <div class="process__copy" data-process-copy aria-live="polite"></div>
+            <div class="tl" data-timeline aria-hidden="true">
+              <div class="tl__ruler" data-ruler></div>
+              <div class="tl__tracks">
+                <div class="tl__track"><span class="tl__label mono">V2</span><div class="tl__lane" data-lane="v2"></div></div>
+                <div class="tl__track"><span class="tl__label mono">V1</span><div class="tl__lane" data-lane="v1"></div></div>
+                <div class="tl__track tl__track--audio"><span class="tl__label mono">A1</span><div class="tl__lane" data-lane="a1"></div></div>
+              </div>
+              <div class="tl__playhead" data-playhead><i></i></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Toolkit -->
+      <section class="tools" data-nav="light">
+        <div class="wrap">
+          <p class="eyebrow" data-reveal>Toolkit</p>
+          <h2 class="h-l" data-reveal>Industry tools.<br /><span class="muted">Used with intent.</span></h2>
+          <ul class="tools__list" data-tools></ul>
+        </div>
+      </section>
+
+      <!-- About -->
+      <section class="about" id="about" data-nav="light">
+        <div class="wrap about__in">
+          <div class="about__mark" aria-hidden="true">
+            <svg class="bigi" viewBox="-12 0 40 106"><path d="M7 47 V93" stroke="currentColor" stroke-width="14" stroke-linecap="round" fill="none" /><path class="bigi__tri" d="M2 17 L17 26 L2 35 Z" /></svg>
+          </div>
+          <div>
+            <p class="eyebrow" data-reveal>About</p>
+            <h2 class="h-m" data-reveal>Reyimation is a one-person edit suite with studio standards.</h2>
+            <p class="lede muted" data-reveal>I edit and animate for brands, creators and agencies. My work starts with the story and ends with the details: the J-cut that hides a jump, the ease that makes a title feel expensive, the mix that lets the voice breathe.</p>
+            <div class="about__facts" data-reveal>
+              <div><span class="mono">Based in</span><b data-location></b></div>
+              <div><span class="mono">Focus</span><b>Editing · Motion · Short-form</b></div>
+              <div><span class="mono">Delivery</span><b>4K ProRes · H.264 · Vertical</b></div>
+            </div>
+            <a class="btn btn--ink" data-cv hidden>Download CV</a>
+          </div>
+        </div>
+      </section>
+
+      <!-- Contact -->
+      <section class="contact" id="contact" data-nav="dark">
+        <div class="contact__glow" aria-hidden="true"></div>
+        <div class="wrap contact__in">
+          <p class="eyebrow" data-reveal>Have a project?</p>
+          <h2 class="h-xl" data-reveal>Let's make it move.</h2>
+          <p class="lede" data-reveal>Tell me about the footage, the deadline and the feeling you are after. I reply within 24 hours.</p>
+          <div class="cta" data-reveal>
+            <a class="btn btn--signal btn--lg" data-mailto>Start a project</a>
+            <button class="btn btn--ghost btn--lg" type="button" data-copy-email><span data-email></span></button>
+          </div>
+          <ul class="socials" data-socials></ul>
+        </div>
+      </section>
+    </main>
+
+    <footer class="foot" data-nav="dark">
+      <div class="wrap">
+        <div class="foot__mark" data-wordmark data-draw="footer"></div>
+        <div class="foot__row">
+          <span>© <span data-year></span> Reyimation. Light, in motion.</span>
+          <a href="#top">Back to top</a>
+        </div>
+      </div>
+    </footer>
+
+    <!-- Video modal -->
+    <div class="modal" data-modal hidden role="dialog" aria-modal="true" aria-label="Video player">
+      <div class="modal__back" data-close></div>
+      <div class="modal__box">
+        <div class="modal__media" data-modal-media></div>
+        <div class="modal__info">
+          <div><b data-modal-title></b><span class="mono" data-modal-meta></span></div>
+          <button class="modal__close" type="button" data-close aria-label="Close player">Close</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="toast mono" data-toast role="status" aria-live="polite"></div>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
