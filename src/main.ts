@@ -123,9 +123,12 @@ function poster(w: Work, i: number): string {
 }
 
 const grid = $("[data-works]");
+// The first project gets the wide tile only when that leaves full rows behind it (an odd count);
+// with an even count every card pairs up, so no row is left half empty.
+const LEAD = WORKS.length % 2 === 1;
 grid.innerHTML = WORKS.map((w, i) => {
   const preview = w.preview ? `<video src="${w.preview}" muted loop playsinline preload="none"></video>` : "";
-  return `<div class="card${i === 0 ? " is-lead" : ""}" data-cat="${w.category}" data-i="${i}" tabindex="0" role="button" aria-label="Play ${w.title}">
+  return `<div class="card${i === 0 && LEAD ? " is-lead" : ""}" data-cat="${w.category}" data-i="${i}" tabindex="0" role="button" aria-label="Play ${w.title}">
     <div class="card__in" data-reveal>
       <div class="card__media">${preview}${poster(w, i)}<span class="card__play" aria-hidden="true"><i></i></span></div>
       <div class="card__body"><div><h3 class="card__title">${w.title}</h3><p class="card__sub">${w.client} · ${w.year}</p></div><span class="card__cat label">${w.category}</span></div>
@@ -171,7 +174,7 @@ $$<HTMLButtonElement>("button", filters).forEach((btn) =>
     const state = Flip.getState(cards);
     cards.forEach((c, i) => {
       c.classList.toggle("is-hidden", cat !== "All" && c.dataset.cat !== cat);
-      c.classList.toggle("is-lead", cat === "All" && i === 0);
+      c.classList.toggle("is-lead", cat === "All" && i === 0 && LEAD);
     });
     ScrollTrigger.refresh();
     if (reduced) return;

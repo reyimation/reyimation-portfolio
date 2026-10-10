@@ -87,12 +87,6 @@ export const WORKS: Work[] = [
     poster: "work/between-pine-and-sea.jpg",
     preview: "work/between-pine-and-sea-preview.mp4",
   },
-  { title: "Brand film in 60 seconds", client: "Client name", category: "Editing", year: 2026, duration: "01:00", summary: "Interviews, b-roll and a sound bed cut down to a single idea.", video: "" },
-  { title: "Logo reveal", client: "Client name", category: "Motion", year: 2026, duration: "00:08", summary: "A line-drawn mark that traces itself on, then lands.", video: "" },
-  { title: "YouTube long-form", client: "Client name", category: "Editing", year: 2026, duration: "12:48", summary: "Retention-first edit with pattern interrupts, captions and sound design.", video: "" },
-  { title: "Reels pack", client: "Client name", category: "Short-form", year: 2026, duration: "00:30", summary: "Five vertical edits built around the first three seconds.", video: "" },
-  { title: "Product explainer", client: "Client name", category: "Motion", year: 2026, duration: "01:30", summary: "Kinetic type and UI animation that explain a product in ninety seconds.", video: "" },
-  { title: "Music video", client: "Client name", category: "Editing", year: 2025, duration: "03:12", summary: "Rhythm-cut performance edit with a graded, filmic look.", video: "" },
 ];
 
 export const SERVICES = [
