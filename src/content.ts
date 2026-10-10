@@ -7,7 +7,7 @@ export const SITE = {
   name: "Reyimation",
   role: "Video editor & motion designer",
   email: "reyimation@gmail.com",
-  location: "India · working worldwide",
+  location: "India, working worldwide",
 
   /**
    * Showreel. Paste a YouTube or Vimeo link, or a direct .mp4 URL / file in /public
