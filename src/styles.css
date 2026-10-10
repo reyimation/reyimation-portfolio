@@ -163,7 +163,9 @@ a, button, [role="button"] { -webkit-tap-highlight-color: transparent; }
 .transit__half--bottom { bottom: 0; }
 .transit__cut { position: absolute; left: 0; right: 0; top: 50%; height: 2px; margin-top: -1px; background: var(--signal); transform-origin: left; }
 .transit__center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; color: var(--paper); text-align: center; padding: var(--gutter); }
-.transit__title { font-size: clamp(48px, 9vw, 112px); line-height: 0.98; font-weight: 600; letter-spacing: -0.035em; }
+/* The box is trimmed to the letters themselves (cap height to baseline), so "centred" means the word
+   is optically centred on screen, on the same line as the Work transition's cut. */
+.transit__title { font-size: clamp(48px, 9vw, 112px); line-height: 1; font-weight: 600; letter-spacing: -0.035em; text-box: trim-both cap alphabetic; }
 .transit__label { color: var(--stone-ink); }
 .transit__mark { width: min(560px, 76vw); color: var(--paper); }
 .transit__playhead { position: absolute; top: 0; bottom: 0; left: 0; width: 2px; margin-left: -1px; background: var(--signal); }
