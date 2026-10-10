@@ -233,7 +233,12 @@ a, button, [role="button"] { -webkit-tap-highlight-color: transparent; }
 }
 .reel__pill i { width: 0; height: 0; border-style: solid; border-width: 5px 0 5px 9px; border-color: transparent transparent transparent var(--paper); }
 .reel__play:hover .reel__pill { background: rgba(250, 250, 247, 0.22); }
-@media (max-width: 720px) { .reel__cap { display: none; } }
+/* Phones: no room beside the window, so the labels sit just above its top corners. */
+@media (max-width: 720px) {
+  .reel__cap { top: calc(50% - 25.3vw - 14px); transform: translateY(-100%); }
+  .reel__cap--l { left: 5vw; }
+  .reel__cap--r { right: 5vw; }
+}
 
 /* ---------- Statement ---------- */
 .statement { padding-block: var(--section); background: var(--paper); }
@@ -448,8 +453,14 @@ a, button, [role="button"] { -webkit-tap-highlight-color: transparent; }
 .modal__close:hover { background: rgba(250, 250, 247, 0.22); }
 
 /* ---------- Toast ---------- */
-.toast { position: fixed; left: 50%; bottom: 28px; z-index: 90; transform: translate(-50%, 24px); visibility: hidden; background: var(--paper); color: var(--ink); padding: 12px 18px; border-radius: 999px; font: 500 13px/1 var(--sans); pointer-events: none; transition: transform 0.4s var(--rise), visibility 0.4s; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25); }
-.toast.is-on { transform: translate(-50%, 0); visibility: visible; }
+/* Rises in, then drops straight off the bottom edge in one move (it starts below the screen, not just under its spot). */
+.toast {
+  position: fixed; left: 50%; bottom: 28px; z-index: 90; transform: translate(-50%, calc(100% + 40px)); visibility: hidden;
+  background: var(--paper); color: var(--ink); padding: 12px 18px; border-radius: 999px; font: 500 13px/1 var(--sans);
+  pointer-events: none; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+  transition: transform 0.45s cubic-bezier(0.6, 0, 0.2, 1), visibility 0s linear 0.45s;
+}
+.toast.is-on { transform: translate(-50%, 0); visibility: visible; transition: transform 0.45s var(--rise), visibility 0s; }
 
 /* ---------- Reduced motion ---------- */
 @media (prefers-reduced-motion: reduce) {

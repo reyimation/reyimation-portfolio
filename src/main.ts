@@ -359,14 +359,16 @@ const ENTER: Record<Route, () => void> = {
       // restarting it mid-draw when the address bar resizes the viewport while scrolling.
       const play = () => { playMark(loopMark); runTimecode(loopTc); };
       if (!reduced) loopMark.classList.add("pre");
-      ScrollTrigger.create({ trigger: ".reel", start: "top 40%", once: true, onEnter: play });
+      // Start once the window has settled in the middle of the screen (the pin start), not while it is
+      // still sliding up from the bottom edge, which on phones made the draw look like it stopped and restarted.
+      ScrollTrigger.create({ trigger: ".reel", start: "top top", once: true, onEnter: play });
     }
 
     if (reduced) {
       gsap.set(reelFrame, { clipPath: windowInset() });
       return;
     }
-    gsap.timeline({ scrollTrigger: { trigger: ".reel", start: "top top", end: "+=140%", pin: true, scrub: 0.6, invalidateOnRefresh: true } })
+    gsap.timeline({ scrollTrigger: { trigger: ".reel", start: "top top", end: "+=140%", pin: true, anticipatePin: 1, scrub: 0.6, invalidateOnRefresh: true } })
       .fromTo(reelFrame, { clipPath: windowInset }, { clipPath: "inset(0px 0px 0px 0px round 0px)", ease: "trace", duration: 1 })
       .to(".reel__cap--l", { x: () => -window.innerWidth * 0.2, ease: "trace", duration: 0.6 }, 0)
       .to(".reel__cap--r", { x: () => window.innerWidth * 0.2, ease: "trace", duration: 0.6 }, 0)
@@ -722,13 +724,29 @@ if (!reduced) {
 
 const toast = $("[data-toast]");
 let toastTimer = 0;
-$("[data-copy-email]").addEventListener("click", async () => {
-  try {
-    await navigator.clipboard.writeText(SITE.email);
-    toast.textContent = "Copied";
-  } catch {
-    toast.textContent = SITE.email;
-  }
+// Copies exactly the email, and only from the email button. If the async clipboard is refused,
+// the kit's fallback copies through a hidden field, so whatever was on the clipboard before never sticks around.
+function copyText(text: string): Promise<boolean> {
+  const fallback = () => {
+    const field = document.createElement("textarea");
+    field.value = text;
+    field.setAttribute("readonly", "");
+    field.style.cssText = "position:fixed;top:0;left:0;opacity:0;pointer-events:none";
+    document.body.append(field);
+    field.select();
+    let ok = false;
+    try { ok = document.execCommand("copy"); } catch { ok = false; }
+    field.remove();
+    return ok;
+  };
+  if (!navigator.clipboard?.writeText) return Promise.resolve(fallback());
+  return navigator.clipboard.writeText(text).then(() => true, () => fallback());
+}
+
+$("[data-copy-email]").addEventListener("click", async (e) => {
+  e.stopPropagation();
+  const ok = await copyText(SITE.email);
+  toast.textContent = ok ? "Copied" : SITE.email;
   toast.classList.add("is-on");
   clearTimeout(toastTimer);
   toastTimer = window.setTimeout(() => toast.classList.remove("is-on"), 1400);
