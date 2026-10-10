@@ -1,4 +1,4 @@
-# Reyimation · Portfolio
+# Reyimation Â· Portfolio
 
 Portfolio site for **Reyimation**, video editing and motion graphics. *Light, in motion.*
 
@@ -20,13 +20,13 @@ Built on the Identity 2026 brand kit: Ink, Paper and one Signal orange, Geist ty
 
 Everything you edit is in **`src/content.ts`**:
 
-- `SITE.reel` — your showreel. A YouTube or Vimeo link, or an `.mp4` (put the file in `public/` and write `"reel.mp4"`).
-- `WORKS` — your projects. For each one set `title`, `client`, `category`, `year`, `duration`, `summary` and `video` (YouTube, Vimeo or `.mp4`).
+- `SITE.reel` â€” your showreel. A YouTube or Vimeo link, or an `.mp4` (put the file in `public/` and write `"reel.mp4"`).
+- `WORKS` â€” your projects. For each one set `title`, `client`, `category`, `year`, `duration`, `summary` and `video` (YouTube, Vimeo or `.mp4`).
   - Optional `poster`: an image in `public/`, for example `"work/brand-film.jpg"`.
   - Optional `preview`: a short muted `.mp4` that plays on hover.
   - The first project gets the big tile.
-- `SITE.socials` — fill in the links you want shown. Empty ones are hidden.
-- `SITE.cv` — put `cv.pdf` in `public/` and set `cv: "cv.pdf"` to show a Download CV button.
+- `SITE.socials` â€” fill in the links you want shown. Empty ones are hidden.
+- `SITE.cv` â€” put `cv.pdf` in `public/` and set `cv: "cv.pdf"` to show a Download CV button.
 
 Keep large videos on YouTube or Vimeo. GitHub rejects files over 100 MB.
 
@@ -40,9 +40,9 @@ npm run dev
 ## Deploy
 
 Every push to `main` builds and publishes to GitHub Pages through `.github/workflows/deploy.yml`.
-One-time setup: in the repository, open **Settings → Pages** and set **Source** to **GitHub Actions**.
+One-time setup: in the repository, open **Settings â†’ Pages** and set **Source** to **GitHub Actions**.
 
-The site will be live at `https://<your-username>.github.io/reyimation-portfolio/`.
+The site is live at **https://reyimation.com** (custom domain set in Settings → Pages; DNS at GoDaddy points to GitHub Pages).
 
 ## Stack
 
