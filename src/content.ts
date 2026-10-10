@@ -9,6 +9,9 @@ export const SITE = {
   email: "reyimation@gmail.com",
   location: "India, working worldwide",
 
+  /** Where both "Book a call" buttons go (opens in a new tab). */
+  booking: "https://cal.com/reyimation",
+
   /**
    * Showreel. Paste a YouTube or Vimeo link, or a direct .mp4 URL / file in /public
    * (for example "reel.mp4"). Leave empty to show the animated brand loop instead.

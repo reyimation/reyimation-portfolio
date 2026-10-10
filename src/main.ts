@@ -66,6 +66,7 @@ $$("[data-wordmark]").forEach((el) => {
 $$("[data-email]").forEach((el) => (el.textContent = SITE.email));
 $("[data-location]").textContent = SITE.location;
 $("[data-year]").textContent = String(new Date().getFullYear());
+$$<HTMLAnchorElement>("[data-booking]").forEach((a) => (a.href = SITE.booking));
 
 const ICONS: Record<string, string> = {
   linkedin: `<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M5.4 3.6a2.1 2.1 0 1 1-4.2 0 2.1 2.1 0 0 1 4.2 0zM1.4 8.2h3.8V21H1.4zM8 8.2h3.6v1.8h.1c.5-.9 1.7-2.1 3.6-2.1 3.9 0 4.6 2.5 4.6 5.8V21H16v-6.3c0-1.5 0-3.4-2.1-3.4s-2.4 1.6-2.4 3.3V21H8z"/></svg>`,
