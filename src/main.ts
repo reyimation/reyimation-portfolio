@@ -42,10 +42,18 @@ function runTimecode(el: HTMLElement) {
   requestAnimationFrame(tick);
 }
 
+// A draw that is still running is never restarted, so a second trigger can't cut it off halfway.
+const drawingUntil = new WeakMap<Element, number>();
 function playMark(container: Element, speed = 1) {
-  if (reduced) container.classList.remove("pre");
-  else draw(container, speed);
+  if (reduced) return container.classList.remove("pre");
+  const now = performance.now();
+  if ((drawingUntil.get(container) ?? 0) > now) return;
+  drawingUntil.set(container, now + drawDuration(speed) * 1000);
+  draw(container, speed);
 }
+
+// Phones resize the viewport as the address bar slides; don't re-measure (and re-fire triggers) for that.
+ScrollTrigger.config({ ignoreMobileResize: true });
 
 /* ================================================================ */
 /* Static content (built once)                                      */
@@ -58,7 +66,6 @@ $$("[data-wordmark]").forEach((el) => {
 $$("[data-email]").forEach((el) => (el.textContent = SITE.email));
 $("[data-location]").textContent = SITE.location;
 $("[data-year]").textContent = String(new Date().getFullYear());
-$("[data-reel-length]").textContent = SITE.reelLength;
 $<HTMLAnchorElement>("[data-mailto]").href = `mailto:${SITE.email}?subject=${encodeURIComponent("New project for Reyimation")}`;
 
 const cv = $<HTMLAnchorElement>("[data-cv]");
@@ -344,17 +351,15 @@ const ENTER: Record<Route, () => void> = {
   home() {
     const heroMark = $("[data-draw='hero']");
     playMark(heroMark);
-    const liveTc = $("[data-live-tc]");
-    if (reduced) liveTc.textContent = "00:00:03:00";
-    else runTimecode(liveTc);
 
     if (reelEmbed.kind !== "file") {
       const loopMark = $("[data-draw='loop']");
       const loopTc = $("[data-loop-tc]");
-      // Like the kit player: each time it comes into view, the mark draws on once, then holds still.
+      // The mark draws on once per visit, then holds still. Playing only once stops phones from
+      // restarting it mid-draw when the address bar resizes the viewport while scrolling.
       const play = () => { playMark(loopMark); runTimecode(loopTc); };
       if (!reduced) loopMark.classList.add("pre");
-      ScrollTrigger.create({ trigger: ".reel", start: "top 40%", end: "bottom 60%", onEnter: play, onEnterBack: play });
+      ScrollTrigger.create({ trigger: ".reel", start: "top 40%", once: true, onEnter: play });
     }
 
     if (reduced) {
@@ -442,7 +447,7 @@ function enterPage(route: Route) {
     // Footer end card draws on each time it comes into view, like the kit's player.
     const footMark = $("[data-draw='footer']");
     if (!reduced) footMark.classList.add("pre");
-    ScrollTrigger.create({ trigger: footMark, start: "top 85%", onEnter: () => playMark(footMark), onEnterBack: () => {} });
+    ScrollTrigger.create({ trigger: footMark, start: "top 85%", once: true, onEnter: () => playMark(footMark) });
   });
 
   ScrollTrigger.refresh();
@@ -462,7 +467,7 @@ function leavePage() {
 
 type Transition = { build: (t: HTMLElement, r: Route) => string; cover: (t: HTMLElement) => gsap.core.Timeline; reveal: (t: HTMLElement) => gsap.core.Timeline };
 
-const titleBlock = (r: Route) => `<div class="transit__center"><span class="label transit__label">${ROUTES[r].num} / ${ROUTES[r].title}</span><p class="transit__title">${ROUTES[r].title}.</p></div>`;
+const titleBlock = (r: Route) => `<div class="transit__center"><p class="transit__title">${ROUTES[r].title}.</p></div>`;
 const TITLE_IN = { clipPath: "inset(0% 0% 100% 0%)", y: 40 };
 const TITLE_SHOWN = { clipPath: "inset(0% 0% -20% 0%)", y: 0 };
 
@@ -558,7 +563,7 @@ const TRANSITIONS: Record<Route, Transition> = {
 
   // About: an iris that opens from the play button, the kit's "it's all in the i" detail.
   about: {
-    build: (_t, r) => `<div class="transit__panel"></div><div class="transit__center"><span class="transit__play"></span><span class="label transit__label">${ROUTES[r].num} / ${ROUTES[r].title}</span><p class="transit__title">${ROUTES[r].title}.</p></div>`,
+    build: (_t, r) => `<div class="transit__panel"></div><div class="transit__center"><span class="transit__play"></span><p class="transit__title">${ROUTES[r].title}.</p></div>`,
     cover: (t) => {
       const tl = gsap.timeline();
       tl.fromTo($(".transit__panel", t), { clipPath: "circle(0% at 50% 50%)" }, { clipPath: "circle(75% at 50% 50%)", duration: 0.7, ease: "trace" }, 0)
