@@ -128,7 +128,7 @@ const grid = $("[data-works]");
 // with an even count every card pairs up, so no row is left half empty.
 const LEAD = WORKS.length % 2 === 1;
 grid.innerHTML = WORKS.map((w, i) => {
-  const preview = w.preview ? `<video src="${w.preview}" muted loop playsinline preload="none"></video>` : "";
+  const preview = w.preview ? `<video src="${w.preview}" muted loop playsinline disablepictureinpicture controlslist="nodownload" preload="none"></video>` : "";
   return `<div class="card${i === 0 && LEAD ? " is-lead" : ""}" data-cat="${w.category}" data-i="${i}" tabindex="0" role="button" aria-label="Play ${w.title}">
     <div class="card__in" data-reveal>
       <div class="card__media">${preview}${poster(w, i)}<span class="card__play" aria-hidden="true"><i></i></span></div>
@@ -720,7 +720,7 @@ function openVideo(title: string, meta: string, url: string, empty = ["Cut in pr
   if (v.kind === "iframe") {
     modalMedia.innerHTML = `<iframe src="${v.src}" title="${title}" allow="autoplay; fullscreen; picture-in-picture; encrypted-media" allowfullscreen></iframe>`;
   } else if (v.kind === "file") {
-    modalMedia.innerHTML = `<video src="${v.src}"${poster ? ` poster="${poster}"` : ""} controls autoplay playsinline preload="auto"></video>`;
+    modalMedia.innerHTML = `<video src="${v.src}"${poster ? ` poster="${poster}"` : ""} controls controlslist="nodownload noplaybackrate noremoteplayback" disablepictureinpicture disableremoteplayback autoplay playsinline preload="auto"></video>`;
   } else {
     modalMedia.innerHTML = `<div class="modal__empty"><div class="modal__mark${reduced ? "" : " pre"}">${wordmark()}</div><b>${empty[0]}</b><span>${empty[1]}</span></div>`;
     playMark($(".modal__mark", modalMedia));
@@ -834,6 +834,14 @@ if (!navigator.onLine) showOffline();
 if (import.meta.env.PROD && "serviceWorker" in navigator) {
   window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js").catch(() => {}));
 }
+
+// Make saving the films harder: no right-click "Save video", no dragging media out of the page.
+document.addEventListener("contextmenu", (e) => {
+  if ((e.target as Element).closest("video, img, .card__media, .modal__media, .reel__frame")) e.preventDefault();
+});
+document.addEventListener("dragstart", (e) => {
+  if ((e.target as Element).closest("video, img")) e.preventDefault();
+});
 
 if (import.meta.env.DEV) Object.assign(window, { ScrollTrigger, lenis, goRoute: go });
 

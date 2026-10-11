@@ -124,8 +124,8 @@ export const SERVICES = [
 export const PROCESS = [
   { title: "Brief", body: "Send the footage. A clear plan within a day.", at: 0 },
   { title: "First cut", body: "The first cut, with music and motion in place.", at: 0.25 },
-  { title: "Revisions", body: "Two rounds of fine-tuning, on the house.", at: 0.5 },
-  { title: "Delivery", body: "Polished in 4K. Delivered on time.", at: 0.75 },
+  { title: "Revisions", body: "Refined together, until every frame feels right.", at: 0.5 },
+  { title: "Delivery", body: "Mastered, ready for every screen. Right on time.", at: 0.75 },
 ];
 
 export const TOOLS = [
