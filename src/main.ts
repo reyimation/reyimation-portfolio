@@ -383,7 +383,7 @@ const ENTER: Record<Route, () => void> = {
       const loopMark = $("[data-loop-mark]");
       const ltr = $$<SVGPathElement>("path.ltr", loopMark);
       const pops = [$<SVGElement>(".tri", loopMark), $<SVGElement>(".dot", loopMark)];
-      ltr.forEach((p) => { p.style.strokeDasharray = "1"; p.style.strokeDashoffset = "1"; });
+      ltr.forEach((p) => { p.style.strokeDasharray = "1 2"; p.style.strokeDashoffset = "1.02"; });
       pops.forEach((el) => Object.assign(el.style, { transformBox: "fill-box", transformOrigin: "center", transform: "scale(0)" }));
       let running: Animation[] = [];
       let busyUntil = 0;
@@ -391,7 +391,7 @@ const ENTER: Record<Route, () => void> = {
         running.forEach((a) => a.cancel());
         const trace = "cubic-bezier(0.6, 0, 0.2, 1)", pop = "cubic-bezier(0.3, 1.6, 0.5, 1)";
         running = [
-          ...ltr.map((p, i) => p.animate([{ strokeDashoffset: 1 }, { strokeDashoffset: 0 }], { duration: 1100, delay: 250 + i * 90, easing: trace, fill: "both" })),
+          ...ltr.map((p, i) => p.animate([{ strokeDashoffset: 1.02 }, { strokeDashoffset: 0 }], { duration: 1100, delay: 250 + i * 90, easing: trace, fill: "both" })),
           pops[0].animate([{ transform: "scale(0)" }, { transform: "scale(1)" }], { duration: 550, delay: 1550, easing: pop, fill: "both" }),
           pops[1].animate([{ transform: "scale(0)" }, { transform: "scale(1)" }], { duration: 450, delay: 1700, easing: pop, fill: "both" }),
         ];
