@@ -650,7 +650,8 @@ function parseRoute(): Route {
   const m = location.hash.match(/^#\/(\w+)/);
   return asRoute(m?.[1] ?? "home");
 }
-const cleanURL = () => location.pathname;
+// "/index.html" shows as just the site root, so the bar reads reyimation.com.
+const cleanURL = () => location.pathname.replace(/index\.html$/i, "");
 
 function show(route: Route) {
   if (current) leavePage();
