@@ -93,28 +93,28 @@ export const SERVICES = [
   {
     code: "01",
     title: "Video editing",
-    body: "YouTube videos, ads, brand films and documentaries, cut for story, pacing and retention.",
+    body: "Commercials, brand films, YouTube and documentaries. Story-first edits with pacing that holds attention to the very last frame.",
     tags: ["Premiere Pro", "Story", "Pacing", "Retention"],
     visual: "clips",
   },
   {
     code: "02",
     title: "Motion graphics",
-    body: "Titles, explainers, logo animation and kinetic type that keep the eye moving.",
+    body: "Titles, logo reveals, kinetic type and explainers, designed and animated to make a brand move.",
     tags: ["After Effects", "Kinetic type", "Logo animation", "Explainers"],
     visual: "player",
   },
   {
     code: "03",
     title: "Short-form",
-    body: "Reels and Shorts with hooks, captions and punch-ins built for the first three seconds.",
+    body: "Reels and Shorts engineered for the first three seconds: hooks, captions, punch-ins and loops that stop the scroll.",
     tags: ["Reels", "Shorts", "Captions", "Hooks"],
     visual: "phone",
   },
   {
     code: "04",
     title: "Colour & sound",
-    body: "A consistent grade and a clean mix, so the finished piece looks and sounds expensive.",
+    body: "Cinematic grading and a clean, layered mix, so every piece looks and sounds finished.",
     tags: ["Colour grading", "Sound design", "Mixing", "Delivery"],
     visual: "wave",
   },
@@ -122,13 +122,13 @@ export const SERVICES = [
 
 /** The process timeline. `at` is where each clip starts on the timeline, 0 to 1. */
 export const PROCESS = [
-  { title: "Brief", body: "You send footage, references and goals. I reply with a plan and a quote within 24 hours.", at: 0 },
-  { title: "First cut", body: "A complete draft with music, pacing and graphics roughed in, so you can see the whole story.", at: 0.25 },
-  { title: "Revisions", body: "Two rounds of revisions are included in every project. Notes are timestamped, nothing gets lost.", at: 0.5 },
-  { title: "Delivery", body: "4K ProRes and H.264, plus vertical cuts and captions if you need them. On time.", at: 0.75 },
+  { title: "Brief", body: "You share footage, references and goals. Within 24 hours you get a clear plan, timeline and quote.", at: 0 },
+  { title: "First cut", body: "A complete first cut with music, pacing and motion in place, so you see the whole story early.", at: 0.25 },
+  { title: "Revisions", body: "Two focused rounds of revisions included. Every note timestamped, nothing missed.", at: 0.5 },
+  { title: "Delivery", body: "Mastered files in 4K ProRes and H.264, plus vertical cuts and captions. Delivered on time, every time.", at: 0.75 },
 ];
 
 export const TOOLS = [
-  { name: "Premiere Pro", use: "Edit", body: "Story, pacing, sound and delivery. Every cut starts here." },
-  { name: "After Effects", use: "Motion", body: "Titles, logo animation, kinetic type and explainers." },
+  { name: "Premiere Pro", use: "Edit", body: "Where every story takes shape: structure, pacing, sound and finishing." },
+  { name: "After Effects", use: "Motion", body: "Where brands come alive: titles, logo reveals, kinetic type and explainers." },
 ];
