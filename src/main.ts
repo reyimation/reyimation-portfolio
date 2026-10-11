@@ -96,10 +96,10 @@ $("[data-tools]").innerHTML = TOOLS.map(
 type Route = "home" | "work" | "services" | "process" | "about";
 const ROUTES: Record<Route, { title: string; num: string; sub: string; theme: "light" | "dark" }> = {
   home: { title: "Reyimation", num: "00", sub: "", theme: "dark" },
-  work: { title: "Work", num: "01", sub: "Commercials and films, cut to hold attention.", theme: "light" },
-  services: { title: "Services", num: "02", sub: "Editing, motion, short-form, colour and sound, under one roof.", theme: "dark" },
-  process: { title: "Process", num: "03", sub: "A clear path from brief to final delivery.", theme: "dark" },
-  about: { title: "About", num: "04", sub: "The creative behind the edit, and the tools that shape it.", theme: "light" },
+  work: { title: "Work", num: "01", sub: "Films and commercials.", theme: "light" },
+  services: { title: "Services", num: "02", sub: "Editing, motion, short-form.", theme: "dark" },
+  process: { title: "Process", num: "03", sub: "Brief to delivery.", theme: "dark" },
+  about: { title: "About", num: "04", sub: "Me and my tools.", theme: "light" },
 };
 
 $("[data-chapters]").innerHTML = (["work", "services", "process", "about"] as Route[])
