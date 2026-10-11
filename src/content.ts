@@ -7,7 +7,7 @@ export const SITE = {
   name: "Reyimation",
   role: "Video editor & motion designer",
   email: "reyimation@gmail.com",
-  location: "India, open to the world",
+  location: "India, creating for the world",
 
   /** Where both "Book a call" buttons go (opens in a new tab). */
   booking: "https://cal.com/reyimation",
