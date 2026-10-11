@@ -7,7 +7,7 @@ export const SITE = {
   name: "Reyimation",
   role: "Video editor & motion designer",
   email: "reyimation@gmail.com",
-  location: "India, working worldwide",
+  location: "India, open to the world",
 
   /** Where both "Book a call" buttons go (opens in a new tab). */
   booking: "https://cal.com/reyimation",
@@ -122,10 +122,10 @@ export const SERVICES = [
 
 /** The process timeline. `at` is where each clip starts on the timeline, 0 to 1. */
 export const PROCESS = [
-  { title: "Brief", body: "Share your footage and goals. Get a plan in 24 hours.", at: 0 },
-  { title: "First cut", body: "A full draft with music and motion.", at: 0.25 },
-  { title: "Revisions", body: "Two rounds of changes, included.", at: 0.5 },
-  { title: "Delivery", body: "Final files in 4K, on time.", at: 0.75 },
+  { title: "Brief", body: "Send the footage. A clear plan within a day.", at: 0 },
+  { title: "First cut", body: "The first cut, with music and motion in place.", at: 0.25 },
+  { title: "Revisions", body: "Two rounds of fine-tuning, on the house.", at: 0.5 },
+  { title: "Delivery", body: "Polished in 4K. Delivered on time.", at: 0.75 },
 ];
 
 export const TOOLS = [
