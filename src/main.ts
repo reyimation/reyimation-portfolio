@@ -126,10 +126,10 @@ function poster(w: Work, i: number): string {
 const grid = $("[data-works]");
 // The first project gets the wide tile only when that leaves full rows behind it (an odd count);
 // with an even count every card pairs up, so no row is left half empty.
-const LEAD = WORKS.length % 2 === 1;
+const LEAD = WORKS.filter((w) => !w.vertical).length % 2 === 1;
 grid.innerHTML = WORKS.map((w, i) => {
   const preview = w.preview ? `<video src="${w.preview}" muted loop playsinline disablepictureinpicture controlslist="nodownload" preload="none"></video>` : "";
-  return `<div class="card${i === 0 && LEAD ? " is-lead" : ""}" data-cat="${[w.category, ...(w.also ?? [])].join("|")}" data-i="${i}" tabindex="0" role="button" aria-label="Play ${w.title}">
+  return `<div class="card${i === 0 && LEAD ? " is-lead" : ""}${w.vertical ? " is-vertical" : ""}" data-cat="${[w.category, ...(w.also ?? [])].join("|")}" data-i="${i}" tabindex="0" role="button" aria-label="Play ${w.title}">
     <div class="card__in" data-reveal>
       <div class="card__media">${preview}${poster(w, i)}<span class="card__play" aria-hidden="true"><i></i></span></div>
       <div class="card__body"><div><h3 class="card__title">${w.title}</h3><p class="card__sub">${w.client} · ${w.year}</p></div><span class="card__cat label">${w.category}</span></div>
@@ -140,7 +140,7 @@ grid.innerHTML = WORKS.map((w, i) => {
 const cards = $$(".card", grid);
 cards.forEach((card) => {
   const w = WORKS[Number(card.dataset.i)];
-  const open = () => openVideo(w.title, `${w.client} · ${w.year} · ${w.duration}`, w.video, undefined, w.poster);
+  const open = () => openVideo(w.title, `${w.client} · ${w.year} · ${w.duration}`, w.video, undefined, w.poster, !!w.vertical);
   card.addEventListener("click", open);
   card.addEventListener("keydown", (e) => {
     if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open(); }
@@ -712,7 +712,8 @@ const modal = $("[data-modal]");
 const modalMedia = $("[data-modal-media]");
 let lastFocus: HTMLElement | null = null;
 
-function openVideo(title: string, meta: string, url: string, empty = ["Cut in progress.", "This one is still in the edit. Check back soon."], poster = "") {
+function openVideo(title: string, meta: string, url: string, empty = ["Cut in progress.", "This one is still in the edit. Check back soon."], poster = "", vertical = false) {
+  modal.classList.toggle("is-vertical", vertical);
   lastFocus = document.activeElement as HTMLElement;
   $("[data-modal-title]").textContent = title;
   $("[data-modal-meta]").textContent = meta;

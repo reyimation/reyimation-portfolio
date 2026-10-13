@@ -50,6 +50,8 @@ export type Work = {
   category: Category;
   /** Extra filters this project also shows under. */
   also?: Category[];
+  /** 9:16 piece (Reels/Shorts): shown in a tall card and a tall player. */
+  vertical?: boolean;
   year: number;
   /** Shown as a timecode chip, e.g. "01:24". */
   duration: string;
@@ -94,6 +96,7 @@ export const WORKS: Work[] = [
     client: "Kinetic type · Vertical",
     category: "Motion",
     also: ["Short-form"],
+    vertical: true,
     year: 2026,
     duration: "00:15",
     summary: "Fifteen seconds of kinetic type and sound design on what separates an edit from a cut.",

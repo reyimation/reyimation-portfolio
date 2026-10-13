@@ -499,3 +499,12 @@ a, button, [role="button"] { -webkit-tap-highlight-color: transparent; }
   .bigi__tri { animation: none; }
   .btn, .card__media > *, .card__play { transition: none; }
 }
+
+/* Short-form: tall 9:16 cards, like Reels and Shorts, and a tall player. */
+.card.is-vertical { grid-column: span 4; }
+.card.is-vertical .card__media { aspect-ratio: 9 / 16; }
+.card.is-vertical .thumb__title { font-size: clamp(26px, 2.6vw, 36px); }
+.modal.is-vertical .modal__box { width: min(420px, 100%, calc((100svh - 140px) * 9 / 16)); }
+.modal.is-vertical .modal__media { aspect-ratio: 9 / 16; }
+@media (max-width: 760px) { .card.is-vertical { grid-column: span 8; } }
+.card.is-vertical .thumb__watch { top: clamp(14px, 2vw, 22px); bottom: auto; right: clamp(14px, 2vw, 22px); }
