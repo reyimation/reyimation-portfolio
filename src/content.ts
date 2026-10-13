@@ -94,8 +94,7 @@ export const WORKS: Work[] = [
   {
     title: "Every Frame Is a Decision",
     client: "Kinetic type · Vertical",
-    category: "Motion",
-    also: ["Short-form"],
+    category: "Short-form",
     vertical: true,
     year: 2026,
     duration: "00:15",
