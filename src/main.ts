@@ -129,7 +129,7 @@ const grid = $("[data-works]");
 const LEAD = WORKS.length % 2 === 1;
 grid.innerHTML = WORKS.map((w, i) => {
   const preview = w.preview ? `<video src="${w.preview}" muted loop playsinline disablepictureinpicture controlslist="nodownload" preload="none"></video>` : "";
-  return `<div class="card${i === 0 && LEAD ? " is-lead" : ""}" data-cat="${w.category}" data-i="${i}" tabindex="0" role="button" aria-label="Play ${w.title}">
+  return `<div class="card${i === 0 && LEAD ? " is-lead" : ""}" data-cat="${[w.category, ...(w.also ?? [])].join("|")}" data-i="${i}" tabindex="0" role="button" aria-label="Play ${w.title}">
     <div class="card__in" data-reveal>
       <div class="card__media">${preview}${poster(w, i)}<span class="card__play" aria-hidden="true"><i></i></span></div>
       <div class="card__body"><div><h3 class="card__title">${w.title}</h3><p class="card__sub">${w.client} · ${w.year}</p></div><span class="card__cat label">${w.category}</span></div>
@@ -163,7 +163,7 @@ cards.forEach((card) => {
 
 // Filters. Cards that stay slide to their new place; new ones rise in; leaving ones go at once,
 // so nothing dark lingers on screen and the page height settles immediately.
-const cats: ("All" | Category)[] = ["All", ...new Set(WORKS.map((w) => w.category))];
+const cats: ("All" | Category)[] = ["All", ...new Set(WORKS.flatMap((w) => [w.category, ...(w.also ?? [])]))];
 const filters = $("[data-filters]");
 filters.innerHTML = cats.map((c, i) => `<button type="button" aria-pressed="${i === 0}">${c}</button>`).join("");
 $$<HTMLButtonElement>("button", filters).forEach((btn) =>
@@ -174,7 +174,7 @@ $$<HTMLButtonElement>("button", filters).forEach((btn) =>
     $$(".card__in.below", grid).forEach((el) => el.classList.remove("below"));
     const state = Flip.getState(cards);
     cards.forEach((c, i) => {
-      c.classList.toggle("is-hidden", cat !== "All" && c.dataset.cat !== cat);
+      c.classList.toggle("is-hidden", cat !== "All" && !c.dataset.cat!.split("|").includes(cat));
       c.classList.toggle("is-lead", cat === "All" && i === 0 && LEAD);
     });
     ScrollTrigger.refresh();

@@ -48,6 +48,8 @@ export type Work = {
   title: string;
   client: string;
   category: Category;
+  /** Extra filters this project also shows under. */
+  also?: Category[];
   year: number;
   /** Shown as a timecode chip, e.g. "01:24". */
   duration: string;
@@ -86,6 +88,18 @@ export const WORKS: Work[] = [
     video: "work/between-pine-and-sea.mp4",
     poster: "work/between-pine-and-sea.jpg",
     preview: "work/between-pine-and-sea-preview.mp4",
+  },
+  {
+    title: "Every Frame Is a Decision",
+    client: "Kinetic type · Vertical",
+    category: "Motion",
+    also: ["Short-form"],
+    year: 2026,
+    duration: "00:15",
+    summary: "Fifteen seconds of kinetic type and sound design on what separates an edit from a cut.",
+    video: "work/every-frame.mp4",
+    poster: "work/every-frame.jpg",
+    preview: "work/every-frame-preview.mp4",
   },
 ];
 
